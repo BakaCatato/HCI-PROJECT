@@ -16,8 +16,8 @@ The user interface was built using standard web technologies:
 ## 👥 The Team
 This project was created by SFIT-2B students from the Department of Information Technology at Quezon City University(San Francisco Campus).
 
-• Jhone Paul B. Cataluña Jr. - Project Manager & Lead Frontend Developer
-• Jam Aubrey Sanchez - Frontend Developer & Documentation
-• John Renus L. Manipon - Documentation & Presentation (PPT)
-• John Richard M. Sorita - Documentation
-• Joro Michaelo Zipagan - Documentation
+* **Jhone Paul B. Cataluña Jr.** - Project Manager & Lead Frontend Developer
+* **Jam Aubrey Sanchez** - Frontend Developer & Documentation
+* **John Renus L. Manipon** - Documentation & Presentation (PPT)
+* **John Richard M. Sorita** - Documentation
+* **Joro Michaelo Zipagan** - Documentation
