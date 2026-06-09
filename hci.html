@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GnC | Gitara ni Cata</title>
+    <link rel="icon" href="assets/cats7.jpg" type="image/x-icon">
+    <style>
+        body {
+            font-family: "Poppins", sans-serif;
+            background-color: #b38b76;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            position: relative;
+            padding: 20px;
+        }
+
+        .guitar-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            justify-content: center;
+            margin-top: 50px;
+            padding: 10px;
+        }
+
+        .guitar-card {
+            background: transparent;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            position: relative;
+            width: 180px;
+            height: 280px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .guitar-card:hover img {
+            transform: scale(1.2);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .guitar-card:hover {
+            transform: scale(1.1);
+        }
+
+        .guitar-body {
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid #8d6e63;
+            border-radius: 50% / 30%;
+            position: absolute;
+            z-index: -1;
+        }
+
+        .guitar-card img {
+            width: 150px;
+            height: auto;
+            border-radius: 5px;
+            z-index: 2;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            z-index: 2;
+        }
+
+        input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        .description {
+            display: none;
+            font-size: 12px;
+            font-style: italic;
+            color: #444;
+            margin-top: 5px;
+            max-width: 80%;
+            text-align: center;
+        }
+
+        .guitar-card:hover .description {
+            display: block;
+        }
+
+        .shopping-cart-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #6d4837;
+            color: white;
+            font-size: 24px;
+            border: none;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .shopping-cart-btn:hover {
+            background: #56372a;
+            transform: scale(1.1);
+        }
+
+        .shopping-cart-btn:active {
+            transform: scale(0.95);
+        }
+    
+        .buttons button {
+            background-color: #6d4837; 
+            color: white;
+            border: none;
+            padding: 5px 5px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background 0.3s, transform 0.2s;
+         }
+
+         .buttons button:hover {
+            background-color: #56372a; 
+            transform: scale(1.05);
+         }
+
+         .buttons button:active {
+            background-color: #452a1f; 
+            transform: scale(0.95);
+         }
+        
+         #cart-modal {
+            display: none;
+            position: fixed;
+            top: 50px;
+            right: 20px;
+            background: #6d4837; 
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 250px;
+            z-index: 1001; 
+         }
+        
+         #cart-modal h3 {
+            margin: 0;
+            font-size: 18px;
+            text-align: center;
+            color: #fff; 
+         }
+
+         #cart-items {
+            list-style: none;
+            padding: 0;
+         }
+
+         #cart-items li {
+            background: #8d6e63; 
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+          }
+
+          #cart-items button {
+            background: #56372a;
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+          }
+
+          #cart-items button:hover {
+            background: #452a1f;
+          }
+
+          #cart-modal button {
+            background: #56372a; 
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: block;
+            margin: 10px auto;
+            transition: background 0.3s ease;
+          }
+
+          #cart-modal button:hover {
+            background: #452a1f;
+          }
+
+        /* About Section Styles */
+        .about-section {
+            background-color: #8d6e63;
+            color: white;
+            padding: 40px 20px;
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        .about-section h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .about-section p {
+            font-size: 16px;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+     /* Buy Now Modal Styles */
+#buy-now-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #8d6e63;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    width: 300px;
+    z-index: 1002;
+}
+
+#buy-now-modal h3 {
+    margin: 0 0 20px;
+    font-size: 20px;
+    text-align: center;
+}
+
+#buy-now-modal label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+#buy-now-modal input {
+    width: 90%;          /* resized: slightly smaller than full width */
+    height: 20px;        /* resized: taller input boxes */
+    padding: 10px;       /* resized: more inner spacing */
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;     /* resized: bigger text */
+    background-color: #fff; 
+    color: #000;          /* text color inside input */
+}
+
+#buy-now-modal button {
+    background: #56372a;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: block;
+    margin: 10px auto 0;
+    transition: background 0.3s ease;
+}
+
+
+        #buy-now-modal button:hover {
+            background: #452a1f;
+        }
+
+         /* New styles for the Confirmation Modal */
+         #confirmation-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #8d6e63;
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 350px;
+            z-index: 1003;
+            text-align: center;
+        }
+
+        #confirmation-modal h3 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        #confirmation-modal p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        #confirmation-modal button {
+            background: #56372a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 20px;
+            transition: background 0.3s ease;
+        }
+
+        #confirmation-modal button:hover {
+            background: #452a1f;
+        }
+
+        /* Overlay for the modal */
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1002;
+        }
+
+        .recently-purchased-btn {
+            position: fixed;
+            top: 20px;
+            right: 95px;
+            background: #6d4837;
+            color: white;
+            font-size: 24px;
+            border: none;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+        
+        .recently-purchased-btn:hover {
+            background: #56372a;
+            transform: scale(1.1);
+        }
+        
+        .recently-purchased-btn:active {
+            transform: scale(0.95);
+        }
+        
+        #purchased-modal {
+            display: none;
+            position: fixed;
+            top: 50px;
+            right: 20px;
+            background: #6d4837;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 250px;
+            z-index: 1001;
+        }
+        
+        #purchased-modal h3 {
+            margin: 0;
+            font-size: 18px;
+            text-align: center;
+            color: #fff;
+        }
+        
+        #purchased-items {
+            list-style: none;
+            padding: 0;
+        }
+        
+        #purchased-items li {
+            background: #8d6e63;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        
+        #purchased-modal button {
+            background: #56372a;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: block;
+            margin: 10px auto;
+            transition: background 0.3s ease;
+        }
+        
+        #purchased-modal button:hover {
+            background: #452a1f;
+        }
+
+                /* Welcome Header Styles */
+        .welcome-header {
+               background-color: #8d6e63;
+               color: white;
+               padding: 30px 20px;
+               text-align: center;
+               border-bottom: 5px solid #6d4837;
+        }
+
+        .welcome-header h1 {
+             font-size: 36px;
+             margin: 0;
+             font-weight: 600;
+        }
+
+        .welcome-header p {
+             font-size: 18px;
+             margin: 10px 0 0;
+             font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <header class="welcome-header">
+        <h1>Welcome to GnC - Gitara ni Cata! 🎸</h1>
+        <p>Your one-stop local shop in the philippines for high-quality guitars.</p>
+        <p>🎶 Find your perfect match and let the music begin! Lezzz goooo🎶</p>
+    </header>
+    <div class="container">
+        <div class="guitar-grid">
+            <div class="guitar-card">
+                <div class="guitar-body"></div>
+                <img src="assets/cata1.png" alt="Cata's Guitar">
+                <p class="price">₱3,999</p>
+                <label>
+                    <input type="radio" name="guitar" onclick="showButtons(this)"> 
+                    <span>GnC Cata's Lumanog Acoustic Guitar</span>
+                </label>
+                <p class="description">A warm-sounding wooden guitar, perfect for unplugged performances.</p>
+                <div class="buttons" style="display: none;">
+                    <button onclick="addToCart('GnC Cata s Lumanog Acoustic Guitar')">Add to Heart</button>
+                    <button onclick="buyNow('GnC Cata s Lumanog Acoustic Guitar')">Mine na kita</button>
+                </div>
+            </div>
+            <div class="guitar-card">
+                <div class="guitar-body"></div>
+                <img src="assets/cata2.png" alt="joro's guitar">
+                <p class="price">₱7,990</p>
+                <label>
+                    <input type="radio" name="guitar" onclick="showButtons(this)"> 
+                    <span>GnC Joro's Classical Guitar</span>
+                </label>
+                <p class="description">A nylon-string guitar ideal for classical and flamenco music.</p>
+                <div class="buttons" style="display: none;">
+                    <button onclick="addToCart('Classic Guitar')">Cart</button>
+                    <button onclick="buyNow('Classic Guitar')">Buy this</button>
+                </div>
+            </div>
+            <div class="guitar-card">
+                <div class="guitar-body"></div>
+                <img src="assets/cata3.png" alt="Renus E-Guitar">
+                <p class="price">₱10,990</p>
+                <label>
+                    <input type="radio" name="guitar" onclick="showButtons(this)"> 
+                    <span>GnC Renus E-Guitar</span>
+                </label>
+                <p class="description">A high-powered guitar great for rock, jazz, and blues.</p>
+                <div class="buttons" style="display: none;">
+                    <button onclick="addToCart('GnC Renus E-Guitar')">Ilagay mona sa cart</button>
+                    <button onclick="buyNow('GnC Renus E-Guitar')">Bilhin</button>
+                </div>
+            </div>
+            <div class="guitar-card">
+                <div class="guitar-body"></div>
+                <img src="assets/cats4.png" alt="Bass Guitar">
+                <p class="price">₱14,990</p>
+                <label>
+                    <input type="radio" name="guitar" onclick="showButtons(this)"> 
+                    <span>GnC JR Sorits Bass Guitar w/bag</span>
+                </label>
+                <p class="description">A deep, rhythmic guitar perfect for setting the groove.</p>
+                <div class="buttons" style="display: none;">
+                    <button onclick="addToCart('GnC JR Sorits Bass Guitar w/bag')">lagay perd</button>
+                    <button onclick="buyNow('GnC JR Sorits Bass Guitar w/bag')">lala, bibilhin.</button>
+                </div>
+            </div>
+            <div class="guitar-card">
+                <div class="guitar-body"></div>
+                <img src="assets/cats5.png" alt="Folk Guitar">
+                <p class="price">₱6,890</p>
+                <label>
+                    <input type="radio" name="guitar" onclick="showButtons(this)"> 
+                    <span>GnC Maj Folk Guitar</span>
+                </label>
+                <p class="description">Designed for rich, full-bodied tones in folk and country music.</p>
+                <div class="buttons" style="display: none;">
+                    <button onclick="addToCart('GnC Maj Folk Guitar')">Ilagay sa cart...</button>
+                    <button onclick="buyNow('GnC Maj Folk Guitar')">Shop Now!</button>
+                </div>
+            </div>
+            <div class="guitar-card">
+                <div class="guitar-body"></div>
+                <img src="assets/cats6.png" alt="Travel Guitar">
+                <p class="price">₱26,900</p>
+                <label>
+                    <input type="radio" name="guitar" onclick="showButtons(this)"> 
+                    <span>GnC Headless Travel Guitar</span>
+                </label>
+                <p class="description">Compact and lightweight, great for musicians on the go.</p>
+                <div class="buttons" style="display: none;">
+                    <button onclick="addToCart('GnC Headless Travel Guitar')">Mamaya na</button>
+                    <button onclick="buyNow('GnC Headless Travel Guitar')">Kunin mo na 'to</button>
+                </div>
+            </div>
+        </div>     
+    </div>
+
+    <!-- About Section -->
+    <div class="about-section">
+        <h2>About GnC - Gitara ni Cata</h2>
+        <p>
+            GnC or Gitara ni Cata is a premier online guitar shop dedicated to serving musicians and aspiring musicians of all levels. Our mission is to provide a seamless and efficient shopping experience, delivering the information our customers need without delay. We strive to create a hassle-free environment for purchasing high-quality guitars and accessories, ensuring that every customer finds their perfect match.
+        </p>
+    </div>
+
+    <button class="recently-purchased-btn" onclick="togglePurchased()">🛍</button>
+
+    <div id="purchased-modal">
+        <h3>Recently Purchased</h3>
+        <ul id="purchased-items"></ul>
+        <button onclick="togglePurchased()">Close</button>
+    </div>
+
+    <!-- Buy Now Modal -->
+    <div id="buy-now-modal">
+        <h3>Complete Your Purchase</h3>
+        <label for="name">Name:</label>
+        <input type="text" id="name" placeholder="Enter your name">
+        <label for="address">Address:</label>
+        <input type="text" id="address" placeholder="Enter your address">
+        <label for="cellphone">Cellphone Number:</label>
+        <input type="text" id="cellphone" placeholder="Enter your cellphone number">
+        <button onclick="proceedPurchase()">Proceed to Buy</button>
+    </div>
+
+     <!-- Confirmation Modal -->
+     <div id="confirmation-modal">
+        <h3>🎉 Salamat Po 🎉</h3>
+        <p>Your purchase of <strong><span id="confirmed-guitar"></span></strong> has been confirmed.</p>
+        <p>We will deliver it to <strong><span id="confirmed-address"></span></strong>.</p>
+        <p>We will contact you at <strong><span id="confirmed-cellphone"></span></strong>.</p>
+        <button onclick="closeConfirmation()">Close</button>
+    </div>
+
+    <!-- Overlay for modals -->
+    <div id="overlay"></div>
+
+    <button class="shopping-cart-btn" onclick="toggleCart()">🛒 <span id="cart-count">0</span></button> 
+<button class="recently-purchased-btn" onclick="togglePurchased()">🛍</button>
+
+<div id="cart-modal">
+    <h3>Shopping Cart</h3>
+    <ul id="cart-items"></ul>
+    <button onclick="toggleCart()">Close</button>
+</div>
+
+
+
+    <script>
+          // Dynamic Greeting Based on Time of Day
+function getGreeting() {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+        return "Good morning! 🌞";
+    } else if (hour < 18) {
+        return "Good afternoon! 🌤";
+    } else {
+        return "Good evening! 🌙";
+    }
+}
+
+// Update the Welcome Header with Dynamic Greeting
+document.addEventListener("DOMContentLoaded", () => {
+    const greeting = getGreeting();
+    const welcomeHeader = document.querySelector(".welcome-header");
+    if (welcomeHeader) {
+        welcomeHeader.innerHTML += `<p>${greeting} Ready kana ba sa susunod mong gitara?</p>`;
+    }
+});
+
+   // Function para ipakita yung buttons kapag yung gitara is selected
+function showButtons(selectedRadio) {
+    document.querySelectorAll('.buttons').forEach(btn => btn.style.display = 'none');
+    let parentCard = selectedRadio.closest('.guitar-card');
+    let buttons = parentCard.querySelector('.buttons');
+    if (buttons) buttons.style.display = 'block';
+}
+
+// Shopping Cart Functions...
+let cart = [];
+function addToCart(guitarName) {
+    cart.push(guitarName);
+    updateCart();
+}
+
+function updateCart() {
+    let cartList = document.getElementById("cart-items");
+    cartList.innerHTML = "";
+    cart.forEach((item, index) => {
+        let li = document.createElement("li");
+        li.textContent = item;
+        let removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remove";
+        removeBtn.onclick = () => removeFromCart(index);
+        li.appendChild(removeBtn);
+        cartList.appendChild(li);
+    });
+    document.getElementById("cart-count").textContent = cart.length;
+}
+
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCart();
+}
+
+function toggleCart() {
+    let cartModal = document.getElementById("cart-modal");
+    cartModal.style.display = cartModal.style.display === "block" ? "none" : "block";
+}
+
+// Buy Now Functions
+let selectedGuitar = "";
+
+function buyNow(guitarName) {
+    selectedGuitar = guitarName;
+    document.getElementById("buy-now-modal").style.display = "block";
+}
+
+function closeConfirmation() {
+    document.getElementById("confirmation-modal").style.display = "none";
+    toggleOverlay();
+    // Clear the form
+    document.getElementById("name").value = "";
+    document.getElementById("address").value = "";
+    document.getElementById("cellphone").value = "";
+}
+
+// Overlay Function
+function toggleOverlay() {
+    const overlay = document.getElementById("overlay");
+    overlay.style.display = overlay.style.display === "block" ? "none" : "block";
+}
+
+// Recently Purchased Functions
+let purchasedItems = [];
+
+function togglePurchased() {
+    let purchasedModal = document.getElementById("purchased-modal");
+    purchasedModal.style.display = purchasedModal.style.display === "block" ? "none" : "block";
+    if (purchasedModal.style.display === "block") {
+        updatePurchasedItems();
+    }
+}
+
+function updatePurchasedItems() {
+    let purchasedList = document.getElementById("purchased-items");
+    purchasedList.innerHTML = "";
+    purchasedItems.forEach(item => {
+        let li = document.createElement("li");
+        li.textContent = item;
+        purchasedList.appendChild(li);
+    });
+}
+
+function proceedPurchase() {
+    const name = document.getElementById("name").value;
+    const address = document.getElementById("address").value;
+    const cellphone = document.getElementById("cellphone").value;
+
+    if (name && address && cellphone) {
+        // Add the purchased item to the list
+        purchasedItems.push(selectedGuitar);
+
+        // Hide the buy now modal
+        document.getElementById("buy-now-modal").style.display = "none";
+
+        // Set the confirmation details
+        document.getElementById("confirmed-guitar").textContent = selectedGuitar;
+        document.getElementById("confirmed-address").textContent = address;
+        document.getElementById("confirmed-cellphone").textContent = cellphone;
+
+        // Show the confirmation modal and overlay
+        document.getElementById("confirmation-modal").style.display = "block";
+        document.getElementById("overlay").style.display = "block";
+    } else {
+        alert("Please fill out all fields before proceeding.");
+    }
+}
+</script>
+</body>
+</html>
