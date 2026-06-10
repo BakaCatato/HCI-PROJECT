@@ -13,6 +13,7 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease; 
         }
 
         .container {
@@ -20,12 +21,98 @@
             padding: 20px;
         }
 
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.1);
+        }
+
+        .search-filter-container {
+            margin: 30px auto 10px;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 0 20px;
+        }
+
+        .search-bar {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: 2px solid rgba(141, 110, 99, 0.5);
+            background-color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            font-family: "Poppins", sans-serif;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-bar:focus {
+            border-color: #56372a;
+            background-color: #fff;
+            box-shadow: 0 4px 15px rgba(86, 55, 42, 0.2);
+            transform: scale(1.02);
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            background-color: rgba(255, 255, 255, 0.5);
+            color: #452a1f;
+            border: 2px solid transparent;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background-color: rgba(255, 255, 255, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background-color: #56372a;
+            color: white;
+            border-color: #56372a;
+            box-shadow: 0 4px 10px rgba(86, 55, 42, 0.3);
+        }
+
         .guitar-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             justify-content: center;
-            margin-top: 50px;
+            margin-top: 20px; 
             padding: 10px;
         }
 
@@ -42,7 +129,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease; 
             cursor: pointer;
             border: 2px solid transparent; 
         }
@@ -70,7 +157,7 @@
             border-radius: 50% / 30%;
             position: absolute;
             z-index: -1;
-            transition: border 0.3s ease-in-out, box-shadow 0.3s ease-in-out; 
+            transition: border 0.3s ease-in-out, box-shadow 0.3s ease-in-out, background 0.4s ease; 
         }
 
         .guitar-card.selected .guitar-body {
@@ -96,6 +183,7 @@
             color: #333;
             z-index: 2;
             cursor: pointer;
+            transition: color 0.4s ease;
         }
 
         input[type="radio"] {
@@ -110,6 +198,7 @@
             margin-top: 5px;
             max-width: 80%;
             text-align: center;
+            transition: color 0.4s ease;
         }
 
         .guitar-card:hover .description {
@@ -289,6 +378,7 @@
             padding: 40px 20px;
             margin-top: 50px;
             text-align: center;
+            transition: background-color 0.4s ease;
         }
 
         .about-section h2 {
@@ -433,6 +523,8 @@
                padding: 30px 20px;
                text-align: center;
                border-bottom: 5px solid #6d4837;
+               position: relative; 
+               transition: background-color 0.4s ease, border-color 0.4s ease;
         }
 
         .welcome-header h1 {
@@ -447,12 +539,11 @@
              font-style: italic;
         }
 
-        /* 🟢 NEW: Toast Notification CSS 🟢 */
         #toast-container {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            z-index: 1010; /* Always on top */
+            z-index: 1010; 
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -476,11 +567,11 @@
         }
 
         .toast.success {
-            border-left: 6px solid #a8e6cf; /* Light green accent */
+            border-left: 6px solid #a8e6cf; 
         }
 
         .toast.error {
-            border-left: 6px solid #ff8b94; /* Light red accent */
+            border-left: 6px solid #ff8b94; 
         }
 
         .toast.hide {
@@ -495,6 +586,80 @@
         @keyframes fadeOutToast {
             from { transform: translateX(0); opacity: 1; }
             to { transform: translateX(100%); opacity: 0; }
+        }
+
+        .no-results {
+            display: none;
+            grid-column: 1 / -1;
+            padding: 40px;
+            font-size: 18px;
+            color: #452a1f;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        /* Dark Mode Overrides */
+        body.dark-mode {
+            background-color: #2c211b; 
+        }
+
+        body.dark-mode .welcome-header {
+            background-color: #1a1411;
+            border-bottom-color: #0d0a08;
+        }
+
+        body.dark-mode .about-section {
+            background-color: #1a1411;
+        }
+
+        body.dark-mode label, body.dark-mode .no-results {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .description {
+            color: #b0b0b0;
+        }
+
+        body.dark-mode .search-bar {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-color: #4a362e;
+        }
+
+        body.dark-mode .search-bar::placeholder {
+            color: #aaa;
+        }
+
+        body.dark-mode .filter-btn {
+            background-color: rgba(0, 0, 0, 0.4);
+            color: #ddd;
+        }
+
+        body.dark-mode .filter-btn.active {
+            background-color: #8d6e63;
+            color: white;
+        }
+
+        body.dark-mode .guitar-body {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: #4a362e;
+        }
+
+        body.dark-mode .guitar-card.selected .guitar-body {
+            border-color: #8d6e63;
+            box-shadow: 0 0 15px rgba(141, 110, 99, 0.4);
+        }
+
+        body.dark-mode .shopping-cart-btn, body.dark-mode .recently-purchased-btn {
+            background: #3d261d;
+        }
+
+        body.dark-mode .buttons button {
+            background-color: #4a362e;
+        }
+
+        body.dark-mode .buttons button:hover {
+            background-color: #6d4837;
         }
 
         @media (max-width: 900px) {
@@ -513,7 +678,7 @@
             .guitar-grid {
                 grid-template-columns: 1fr; 
                 gap: 30px;
-                margin-top: 30px;
+                margin-top: 10px;
             }
             .shopping-cart-btn, .recently-purchased-btn {
                 top: 10px;
@@ -527,18 +692,45 @@
             .recently-purchased-btn {
                 right: 65px;
             }
+            .search-bar {
+                font-size: 14px;
+            }
+            .filter-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .theme-toggle {
+                top: 10px;
+                left: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
     <header class="welcome-header">
+        <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+        
         <h1>Welcome to GnC - Gitara ni Cata! 🎸</h1>
         <p>Your one-stop local shop in the philippines for high-quality guitars.</p>
         <p>🎶 Find your perfect match and let the music begin! Lezzz goooo🎶</p>
     </header>
+
+    <div class="search-filter-container">
+        <input type="text" id="search-input" class="search-bar" placeholder="Search for a guitar... (e.g. Lumanog)" oninput="filterGuitars()">
+        <div class="filter-buttons">
+            <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+            <button class="filter-btn" onclick="setFilter('acoustic', this)">Acoustic</button>
+            <button class="filter-btn" onclick="setFilter('electric', this)">Electric</button>
+            <button class="filter-btn" onclick="setFilter('bass', this)">Bass</button>
+        </div>
+    </div>
+
     <div class="container">
-        <div class="guitar-grid">
-            <div class="guitar-card" onclick="selectGuitar(this)">
+        <div class="guitar-grid" id="guitar-grid">
+            <div class="guitar-card" data-category="acoustic" onclick="selectGuitar(this)">
                 <div class="guitar-body"></div>
                 <img src="assets/cata1.png" alt="Cata's Guitar">
                 <p class="price">₱3,999</p>
@@ -553,7 +745,7 @@
                 </div>
             </div>
 
-            <div class="guitar-card" onclick="selectGuitar(this)">
+            <div class="guitar-card" data-category="acoustic" onclick="selectGuitar(this)">
                 <div class="guitar-body"></div>
                 <img src="assets/cata2.png" alt="joro's guitar">
                 <p class="price">₱7,990</p>
@@ -568,7 +760,7 @@
                 </div>
             </div>
 
-            <div class="guitar-card" onclick="selectGuitar(this)">
+            <div class="guitar-card" data-category="electric" onclick="selectGuitar(this)">
                 <div class="guitar-body"></div>
                 <img src="assets/cata3.png" alt="Renus E-Guitar">
                 <p class="price">₱10,990</p>
@@ -583,7 +775,7 @@
                 </div>
             </div>
 
-            <div class="guitar-card" onclick="selectGuitar(this)">
+            <div class="guitar-card" data-category="bass" onclick="selectGuitar(this)">
                 <div class="guitar-body"></div>
                 <img src="assets/cats4.png" alt="Bass Guitar">
                 <p class="price">₱14,990</p>
@@ -598,7 +790,7 @@
                 </div>
             </div>
 
-            <div class="guitar-card" onclick="selectGuitar(this)">
+            <div class="guitar-card" data-category="acoustic" onclick="selectGuitar(this)">
                 <div class="guitar-body"></div>
                 <img src="assets/cats5.png" alt="Folk Guitar">
                 <p class="price">₱6,890</p>
@@ -613,7 +805,7 @@
                 </div>
             </div>
 
-            <div class="guitar-card" onclick="selectGuitar(this)">
+            <div class="guitar-card" data-category="electric" onclick="selectGuitar(this)">
                 <div class="guitar-body"></div>
                 <img src="assets/cats6.png" alt="Travel Guitar">
                 <p class="price">₱26,900</p>
@@ -626,6 +818,10 @@
                     <button onclick="event.stopPropagation(); addToCart('GnC Headless Travel Guitar')">Mamaya na</button>
                     <button onclick="event.stopPropagation(); buyNow('GnC Headless Travel Guitar')">Kunin mo na 'to</button>
                 </div>
+            </div>
+            
+            <div id="no-results" class="no-results">
+                Aww, wala kaming nakitang gitara na ganyan. Subukan mag-type ng iba! 🎸
             </div>
         </div>     
     </div>
@@ -683,6 +879,30 @@
         let cart = JSON.parse(localStorage.getItem('gnc_cart')) || [];
         let purchasedItems = JSON.parse(localStorage.getItem('gnc_purchased')) || [];
 
+        const currentTheme = localStorage.getItem('gnc_theme');
+        if (currentTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('theme-toggle').textContent = '☀️';
+            });
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const toggleBtn = document.getElementById('theme-toggle');
+            
+            body.classList.toggle('dark-mode');
+            
+            // 🟢 MODIFIED: Inalis na natin yung showToast dito 🟢
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('gnc_theme', 'dark');
+                toggleBtn.textContent = '☀️';
+            } else {
+                localStorage.setItem('gnc_theme', 'light');
+                toggleBtn.textContent = '🌙';
+            }
+        }
+
         function getGreeting() {
             const hour = new Date().getHours();
             if (hour < 12) {
@@ -705,21 +925,63 @@
             updatePurchasedItems();
         });
 
-        // 🟢 NEW: Toast Function Logic 🟢
+        let currentCategoryFilter = 'all';
+
+        function setFilter(category, btnElement) {
+            currentCategoryFilter = category;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            filterGuitars();
+        }
+
+        function filterGuitars() {
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            const cards = document.querySelectorAll('.guitar-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const guitarName = card.querySelector('label span').textContent.toLowerCase();
+                const guitarCategory = card.getAttribute('data-category');
+                
+                const matchesSearch = guitarName.includes(searchQuery);
+                const matchesCategory = (currentCategoryFilter === 'all') || (guitarCategory === currentCategoryFilter);
+
+                if (matchesSearch && matchesCategory) {
+                    card.style.display = 'flex'; 
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                    if (card.classList.contains('selected')) {
+                        card.classList.remove('selected');
+                        let btns = card.querySelector('.buttons');
+                        if (btns) btns.style.display = 'none';
+                        let radio = card.querySelector('input[type="radio"]');
+                        if (radio) radio.checked = false;
+                    }
+                }
+            });
+
+            const noResultsMsg = document.getElementById('no-results');
+            if (visibleCount === 0) {
+                noResultsMsg.style.display = 'block';
+            } else {
+                noResultsMsg.style.display = 'none';
+            }
+        }
+
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             
-            // Add classes based on success or error
             toast.className = `toast ${type}`;
             toast.innerHTML = `<span>${message}</span>`;
             
             container.appendChild(toast);
 
-            // Wait 3 seconds, then slide out
             setTimeout(() => {
                 toast.classList.add('hide');
-                // Remove from HTML completely after animation finishes
                 setTimeout(() => {
                     toast.remove();
                 }, 400); 
@@ -733,8 +995,10 @@
             const isClickInsidePanel = event.target.closest('.side-panel');
             const isClickOnCartBtn = event.target.closest('.shopping-cart-btn');
             const isClickOnShopBtn = event.target.closest('.recently-purchased-btn');
+            const isClickInsideSearch = event.target.closest('.search-filter-container');
+            const isClickOnThemeBtn = event.target.closest('.theme-toggle'); 
 
-            if (!isClickInsideCard && !isClickInsideBuyModal && !isClickInsideConfModal && !isClickInsidePanel && !isClickOnCartBtn && !isClickOnShopBtn) {
+            if (!isClickInsideCard && !isClickInsideBuyModal && !isClickInsideConfModal && !isClickInsidePanel && !isClickOnCartBtn && !isClickOnShopBtn && !isClickInsideSearch && !isClickOnThemeBtn) {
                 document.querySelectorAll('.guitar-card').forEach(card => {
                     card.classList.remove('selected');
                     let btns = card.querySelector('.buttons');
@@ -799,7 +1063,6 @@
             localStorage.setItem('gnc_cart', JSON.stringify(cart)); 
             updateCart();
             
-            // 🟢 Trigger success toast when item is added 🟢
             showToast(`Added to cart: ${guitarName} 🛒`, 'success');
         }
 
@@ -819,13 +1082,11 @@
         }
 
         function removeFromCart(index) {
-            // Save the name before removing it to show in the toast
             const removedItem = cart[index];
             cart.splice(index, 1);
             localStorage.setItem('gnc_cart', JSON.stringify(cart)); 
             updateCart();
             
-            // Optional: Show a red toast when removing items
             showToast(`Removed: ${removedItem} ❌`, 'error');
         }
 
@@ -871,7 +1132,6 @@
                 document.getElementById("confirmed-cellphone").textContent = cellphone;
                 document.getElementById("confirmation-modal").style.display = "block";
             } else {
-                // 🟢 Replaced alert() with our new error toast 🟢
                 showToast("Please fill out all fields before proceeding! ⚠️", "error");
             }
         }
