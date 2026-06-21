@@ -11,7 +11,6 @@
     <header class="welcome-header">
         <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
 
-        
         <h1 id="welcome-title">Welcome to GnC - Gitara ni Cata! 🎸</h1>
         <p>Your one-stop local shop in the philippines for high-quality guitars.</p>
         <p>🎶 Find your perfect match and let the music begin! Lezzz goooo🎶</p>
@@ -29,96 +28,6 @@
 
     <div class="container">
         <div class="guitar-grid" id="guitar-grid">
-            <div class="guitar-card" data-category="acoustic" onclick="selectGuitar(this)">
-                <div class="guitar-body"></div>
-                <img src="assets/cata1.png" alt="Cata's Guitar">
-                <p class="price">₱3,999</p>
-                <label>
-                    <input type="radio" name="guitar" value="GnC Cata's Lumanog Acoustic Guitar"> 
-                    <span>GnC Cata's Lumanog Acoustic Guitar</span>
-                </label>
-                <p class="description">A warm-sounding wooden guitar, perfect for unplugged performances.</p>
-                <div class="buttons" style="display: none;">
-                    <button onclick="event.stopPropagation(); addToCart('GnC Cata s Lumanog Acoustic Guitar')">Add to Heart</button>
-                    <button onclick="event.stopPropagation(); buyNow('GnC Cata s Lumanog Acoustic Guitar')">Mine na kita</button>
-                </div>
-            </div>
-
-            <div class="guitar-card" data-category="acoustic" onclick="selectGuitar(this)">
-                <div class="guitar-body"></div>
-                <img src="assets/cata2.png" alt="joro's guitar">
-                <p class="price">₱7,990</p>
-                <label>
-                    <input type="radio" name="guitar" value="GnC Joro's Classical Guitar"> 
-                    <span>GnC Joro's Classical Guitar</span>
-                </label>
-                <p class="description">A nylon-string guitar ideal for classical and flamenco music.</p>
-                <div class="buttons" style="display: none;">
-                    <button onclick="event.stopPropagation(); addToCart('Classic Guitar')">Cart</button>
-                    <button onclick="event.stopPropagation(); buyNow('Classic Guitar')">Buy this</button>
-                </div>
-            </div>
-
-            <div class="guitar-card" data-category="electric" onclick="selectGuitar(this)">
-                <div class="guitar-body"></div>
-                <img src="assets/cata3.png" alt="Renus E-Guitar">
-                <p class="price">₱10,990</p>
-                <label>
-                    <input type="radio" name="guitar" value="GnC Renus E-Guitar"> 
-                    <span>GnC Renus E-Guitar</span>
-                </label>
-                <p class="description">A high-powered guitar great for rock, jazz, and blues.</p>
-                <div class="buttons" style="display: none;">
-                    <button onclick="event.stopPropagation(); addToCart('GnC Renus E-Guitar')">Ilagay mona sa cart</button>
-                    <button onclick="event.stopPropagation(); buyNow('GnC Renus E-Guitar')">Bilhin</button>
-                </div>
-            </div>
-
-            <div class="guitar-card" data-category="bass" onclick="selectGuitar(this)">
-                <div class="guitar-body"></div>
-                <img src="assets/cats4.png" alt="Bass Guitar">
-                <p class="price">₱14,990</p>
-                <label>
-                    <input type="radio" name="guitar" value="GnC JR Sorits Bass Guitar w/bag"> 
-                    <span>GnC JR Sorits Bass Guitar w/bag</span>
-                </label>
-                <p class="description">A deep, rhythmic guitar perfect for setting the groove.</p>
-                <div class="buttons" style="display: none;">
-                    <button onclick="event.stopPropagation(); addToCart('GnC JR Sorits Bass Guitar w/bag')">lagay perd</button>
-                    <button onclick="event.stopPropagation(); buyNow('GnC JR Sorits Bass Guitar w/bag')">lala, bibilhin.</button>
-                </div>
-            </div>
-
-            <div class="guitar-card" data-category="acoustic" onclick="selectGuitar(this)">
-                <div class="guitar-body"></div>
-                <img src="assets/cats5.png" alt="Folk Guitar">
-                <p class="price">₱6,890</p>
-                <label>
-                    <input type="radio" name="guitar" value="GnC Maj Folk Guitar"> 
-                    <span>GnC Maj Folk Guitar</span>
-                </label>
-                <p class="description">Designed for rich, full-bodied tones in folk and country music.</p>
-                <div class="buttons" style="display: none;">
-                    <button onclick="event.stopPropagation(); addToCart('GnC Maj Folk Guitar')">Ilagay sa cart...</button>
-                    <button onclick="event.stopPropagation(); buyNow('GnC Maj Folk Guitar')">Shop Now!</button>
-                </div>
-            </div>
-
-            <div class="guitar-card" data-category="electric" onclick="selectGuitar(this)">
-                <div class="guitar-body"></div>
-                <img src="assets/cats6.png" alt="Travel Guitar">
-                <p class="price">₱26,900</p>
-                <label>
-                    <input type="radio" name="guitar" value="GnC Headless Travel Guitar"> 
-                    <span>GnC Headless Travel Guitar</span>
-                </label>
-                <p class="description">Compact and lightweight, great for musicians on the go.</p>
-                <div class="buttons" style="display: none;">
-                    <button onclick="event.stopPropagation(); addToCart('GnC Headless Travel Guitar')">Mamaya na</button>
-                    <button onclick="event.stopPropagation(); buyNow('GnC Headless Travel Guitar')">Kunin mo na 'to</button>
-                </div>
-            </div>
-            
             <div id="no-results" class="no-results">
                 Aww, wala kaming nakitang gitara na ganyan. Subukan mag-type ng iba! 🎸
             </div>
@@ -144,7 +53,6 @@
         <span id="cart-count" style="font-size: 18px; font-weight: bold;">0</span>
     </button>
 
-    <!-- Profile Dropdown -->
     <div class="profile-dropdown-wrapper" id="profile-dropdown-wrapper">
         <button class="profile-btn" onclick="toggleProfileDropdown()" title="Profile">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="26" height="26">
@@ -219,19 +127,36 @@
     <div id="toast-container"></div>
 
     <script>
-        // 🟢 BAGO: Gatekeeper Logic (Nakaharang sa simula ng script) 🟢
+        // Gatekeeper Logic
         const activeUserStr = localStorage.getItem('gnc_user');
-        
         if (!activeUserStr) {
-            // Kung walang user na naka-login, ibalik agad sa login.html
             window.location.href = 'login.html';
         }
-        
         const activeUser = activeUserStr ? JSON.parse(activeUserStr) : null;
 
         let cart = JSON.parse(localStorage.getItem('gnc_cart')) || [];
         let purchasedItems = JSON.parse(localStorage.getItem('gnc_purchased')) || [];
 
+       // 🟢 BAGO: Dito nakasulat lahat ng gitara mo! (Ang "Mini Database" natin) 🟢
+        const guitarDatabase = [
+            // --- YUNG ANIM MONG ORIGINAL NA GITARA (Nasa Assets Folder mo) ---
+            { name: "GnC Cata's Lumanog Acoustic", price: "₱3,999", category: "acoustic", image: "assets/cata1.png", description: "A warm-sounding wooden guitar, perfect for unplugged performances.", cartText: "Add to Heart", buyText: "Mine na kita" },
+            { name: "GnC Joro's Classical Guitar", price: "₱7,990", category: "acoustic", image: "assets/cata2.png", description: "A nylon-string guitar ideal for classical and flamenco music.", cartText: "Cart", buyText: "Buy this" },
+            { name: "GnC Renus E-Guitar", price: "₱10,990", category: "electric", image: "assets/cata3.png", description: "A high-powered guitar great for rock, jazz, and blues.", cartText: "Ilagay sa cart", buyText: "Bilhin" },
+            { name: "GnC JR Sorits Bass w/bag", price: "₱14,990", category: "bass", image: "assets/cats4.png", description: "A deep, rhythmic guitar perfect for setting the groove.", cartText: "Lagay pre", buyText: "Bibilhin" },
+            { name: "GnC Maj Folk Guitar", price: "₱6,890", category: "acoustic", image: "assets/cats5.png", description: "Designed for rich, full-bodied tones in folk and country music.", cartText: "Ilagay sa cart...", buyText: "Shop Now!" },
+            { name: "GnC Headless Travel Guitar", price: "₱26,900", category: "electric", image: "assets/cats6.png", description: "Compact and lightweight, great for musicians on the go.", cartText: "Mamaya na", buyText: "Kunin mo na 'to" },
+            
+            // --- YUNG ANIM NA BAGONG GITARA (Kumukuha ng Live Images sa Internet) ---
+            { name: "GnC Jam's Signature Strat", price: "₱15,500", category: "electric", image: "https://images.unsplash.com/photo-1564186763535-ebb964f94349?w=300&q=80", description: "Versatile tone with an iconic body shape, perfect for any genre.", cartText: "Add to Cart", buyText: "Checkout" },
+            { name: "GnC Richwood Acoustic-Electric", price: "₱12,500", category: "acoustic", image: "https://images.unsplash.com/photo-1550291652-6ea9114a47b1?w=300&q=80", description: "Play unplugged or plugged in with built-in preamp and tuner.", cartText: "Save for later", buyText: "Get it now" },
+            { name: "GnC Heavy Metal Bass", price: "₱18,200", category: "bass", image: "https://images.unsplash.com/photo-1514649923863-ceaf75b770ab?w=300&q=80", description: "Active pickups deliver aggressive, punchy tones for heavy music.", cartText: "Cart", buyText: "Rock on!" },
+            { name: "GnC Vintage Hollowbody", price: "₱22,000", category: "electric", image: "https://images.unsplash.com/photo-1556449895-a33c9fac3300?w=300&q=80", description: "Classic retro looks with a warm, resonant jazz tone.", cartText: "Add to list", buyText: "Buy Vintage" },
+            { name: "GnC Beginner's Acoustic Kit", price: "₱2,500", category: "acoustic", image: "https://images.unsplash.com/photo-1605020420620-20c943cc4669?w=300&q=80", description: "Everything you need to start playing, including picks and a strap.", cartText: "Cart", buyText: "Start Playing" },
+            { name: "GnC Studio Pro 5-String Bass", price: "₱21,000", category: "bass", image: "https://images.unsplash.com/photo-1462965326201-d02e4f455804?w=300&q=80", description: "Extended range for modern pop, gospel, and R&B styles.", cartText: "Save", buyText: "Mine!" }
+        ];
+
+        // Theme Initialization
         const currentTheme = localStorage.getItem('gnc_theme');
         if (currentTheme === 'dark') {
             document.body.classList.add('dark-mode');
@@ -269,9 +194,8 @@
         document.addEventListener("DOMContentLoaded", () => {
             const greeting = getGreeting();
             const welcomeHeader = document.querySelector(".welcome-header");
-            const welcomeTitle = document.getElementById("welcome-title"); // Target for dynamic name
+            const welcomeTitle = document.getElementById("welcome-title"); 
             
-            // 🟢 BAGO: Update the welcome title with the logged-in username 🟢
             if (activeUser && welcomeTitle) {
                 welcomeTitle.innerHTML = `Welcome, ${activeUser.username}! 🎸`;
             }
@@ -280,9 +204,48 @@
                 welcomeHeader.innerHTML += `<p>${greeting} Ready kana ba sa susunod mong gitara?</p>`;
             }
             
+            // 🟢 BAGO: Tawagin natin ang function na gumagawa ng HTML cards!
+            renderGuitars(); 
+
             updateCart();
             updatePurchasedItems();
         });
+
+        // 🟢 BAGO: Function na nagco-convert ng Array papuntang HTML 🟢
+        function renderGuitars() {
+            const grid = document.getElementById('guitar-grid');
+            let cardsHTML = '';
+            
+            guitarDatabase.forEach(guitar => {
+                // Sini-sigurado na ligtas basahin ng Javascript ang single quotes (')
+                const safeName = guitar.name.replace(/'/g, "\\'"); 
+                
+                cardsHTML += `
+                <div class="guitar-card" data-category="${guitar.category}" onclick="selectGuitar(this)">
+                    <div class="guitar-body"></div>
+                    <img src="${guitar.image}" alt="${guitar.name}">
+                    <p class="price">${guitar.price}</p>
+                    <label>
+                        <input type="radio" name="guitar" value="${guitar.name}"> 
+                        <span>${guitar.name}</span>
+                    </label>
+                    <p class="description">${guitar.description}</p>
+                    <div class="buttons" style="display: none;">
+                        <button onclick="event.stopPropagation(); addToCart('${safeName}')">${guitar.cartText}</button>
+                        <button onclick="event.stopPropagation(); buyNow('${safeName}')">${guitar.buyText}</button>
+                    </div>
+                </div>
+                `;
+            });
+            
+            // I-append ang "No Results" message sa pinakadulo ng grid
+            cardsHTML += `
+            <div id="no-results" class="no-results">
+                Aww, wala kaming nakitang gitara na ganyan. Subukan mag-type ng iba! 🎸
+            </div>`;
+            
+            grid.innerHTML = cardsHTML;
+        }
 
         let currentCategoryFilter = 'all';
 
@@ -358,7 +321,6 @@
             const isClickOnThemeBtn = event.target.closest('.theme-toggle'); 
             const isClickOnProfileDropdown = event.target.closest('.profile-dropdown-wrapper');
 
-            // Close profile dropdown if clicking outside it
             if (!isClickOnProfileDropdown) {
                 const menu = document.getElementById('profile-dropdown-menu');
                 if (menu) menu.classList.remove('open');
@@ -507,7 +469,6 @@
             menu.classList.toggle('open');
         }
 
-        // Populate profile dropdown with active user info
         if (activeUser) {
             const dropdownUsername = document.getElementById('dropdown-username');
             const dropdownRole = document.getElementById('dropdown-role');
