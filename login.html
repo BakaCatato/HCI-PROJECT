@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GnC | Login - Gitara ni Cata</title>
+    <link rel="icon" href="assets/cats7.jpg" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+
+    <!-- ============ LOADING SCREEN ============ -->
+    <div id="loading-screen">
+        <div class="brand-icon" style="font-size: 60px; margin-bottom: 10px;">🎸</div>
+        <div class="loader-logo">GnC</div>
+        <div class="loader-tagline">Gitara ni Cata</div>
+        <div class="guitar-strings">
+            <div class="guitar-string"></div>
+            <div class="guitar-string"></div>
+            <div class="guitar-string"></div>
+            <div class="guitar-string"></div>
+            <div class="guitar-string"></div>
+            <div class="guitar-string"></div>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="loader-percent" id="loader-percent">Loading...</div>
+    </div>
+
+    <!-- ============ LOGIN PAGE ============ -->
+    <div id="login-page">
+        <!-- LEFT PANEL – Branding -->
+        <div class="login-left">
+            <div class="brand-icon">🎸</div>
+            <h1 class="brand-title">Gitara<br>ni Cata</h1>
+            <p class="brand-subtitle">"Let the music begin!"</p>
+            <p class="brand-description">
+                Your one-stop local shop in the Philippines for high-quality guitars. 
+                From acoustic to electric, we have the perfect instrument waiting for you.
+            </p>
+            <div class="brand-features">
+                <div class="feature-item">
+                    <div class="feature-icon">🎶</div>
+                    <span>Premium quality guitars at great prices</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🚚</div>
+                    <span>Fast & secure delivery nationwide</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💖</div>
+                    <span>Trusted by musicians across the Philippines</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL – Login Form -->
+        <div class="login-right">
+            <div class="login-card">
+                <h2>Welcome back! 👋</h2>
+                <p class="form-subtitle">Sign in to your GnC account</p>
+
+                <div class="error-msg" id="error-msg">
+                    <span>⚠️</span>
+                    <span id="error-text">Invalid username or password.</span>
+                </div>
+
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <div class="input-group">
+                        <label for="login-username">Username</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="login-username" placeholder="Enter your username" autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="login-password">Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="login-password" placeholder="Enter your password" autocomplete="current-password">
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" title="Toggle password visibility">👁️</button>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox" id="remember-me">
+                            <span>Remember me</span>
+                        </label>
+                        <a href="#" class="forgot-link" onclick="showToast('Feature coming soon! 🔧')">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-login" id="btn-login">Sign In</button>
+                </form>
+
+                <div class="divider">
+                    <span>or</span>
+                </div>
+
+                <button class="btn-guest" onclick="enterAsGuest()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                        <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                    </svg>
+                    Continue as Guest
+                </button>
+
+                <p class="signup-link">
+                    Don't have an account? <a href="#" onclick="showToast('Sign up coming soon! 🚀')">Sign Up</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="login-toast"></div>
+
+    <script>
+        // ==========================================
+        // LOADING SCREEN LOGIC
+        // ==========================================
+        const loadingScreen = document.getElementById('loading-screen');
+        const loginPage = document.getElementById('login-page');
+        const progressBar = document.getElementById('progress-bar');
+        const loaderPercent = document.getElementById('loader-percent');
+
+        let progress = 0;
+
+        function animateLoader() {
+            const interval = setInterval(() => {
+                // Simulate realistic loading increments
+                const increment = Math.random() * 12 + 3;
+                progress = Math.min(progress + increment, 100);
+
+                loaderPercent.textContent = Math.floor(progress) + '%';
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    loaderPercent.textContent = '100%';
+
+                    // Fade out loading screen, then show login
+                    setTimeout(() => {
+                        loadingScreen.classList.add('fade-out');
+
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                            loginPage.style.display = 'flex';
+
+                            // Trigger reflow for animation
+                            void loginPage.offsetWidth;
+                            loginPage.classList.add('visible');
+                        }, 800);
+                    }, 400);
+                }
+            }, 200);
+        }
+
+        // Start loading after a brief delay
+        setTimeout(animateLoader, 1500);
+
+        // ==========================================
+        // LOGIN LOGIC
+        // ==========================================
+        // Demo credentials
+        const VALID_USERS = [
+            { username: 'admin', password: 'admin123' },
+            { username: 'cata', password: 'guitar123' },
+            { username: 'guest', password: 'guest' }
+        ];
+
+        function handleLogin(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+            const errorText = document.getElementById('error-text');
+            const btnLogin = document.getElementById('btn-login');
+
+            // Reset error
+            errorMsg.classList.remove('show');
+
+            // Validate empty fields
+            if (!username || !password) {
+                errorText.textContent = 'Please fill in all fields!';
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            // Simulate login processing
+            btnLogin.textContent = 'Signing in...';
+            btnLogin.disabled = true;
+
+            setTimeout(() => {
+                const user = VALID_USERS.find(
+                    u => u.username.toLowerCase() === username.toLowerCase() && u.password === password
+                );
+
+                if (user) {
+                    // Save login state
+                    localStorage.setItem('gnc_user', JSON.stringify({
+                        username: user.username,
+                        isGuest: false,
+                        loggedInAt: new Date().toISOString()
+                    }));
+
+                    showToast(`Welcome back, ${user.username}! 🎸`);
+
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1200);
+                } else {
+                    errorText.textContent = 'Invalid username or password. Try again!';
+                    errorMsg.classList.add('show');
+                    btnLogin.textContent = 'Sign In';
+                    btnLogin.disabled = false;
+                }
+            }, 1000);
+        }
+
+        function enterAsGuest() {
+            localStorage.setItem('gnc_user', JSON.stringify({
+                username: 'Guest',
+                isGuest: true,
+                loggedInAt: new Date().toISOString()
+            }));
+
+            showToast('Welcome, Guest! Enjoy browsing 🎶');
+
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1200);
+        }
+
+        function togglePasswordVisibility() {
+            const pwd = document.getElementById('login-password');
+            const btn = document.querySelector('.toggle-password');
+
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                pwd.type = 'password';
+                btn.textContent = '👁️';
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('login-toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Check if user is already logged in
+        const existingUser = localStorage.getItem('gnc_user');
+        if (existingUser) {
+            // Already logged in — skip to shop
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
