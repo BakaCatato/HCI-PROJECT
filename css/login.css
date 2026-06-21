@@ -187,9 +187,21 @@
         }
 
         .brand-icon {
-            font-size: 50px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2.5px solid #d4a88c;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
             animation: gentleBounce 3s ease-in-out infinite;
+            display: block;
+        }
+
+        .brand-icon.loader-icon {
+            width: 85px;
+            height: 85px;
+            margin-bottom: 15px;
         }
 
         @keyframes gentleBounce {
