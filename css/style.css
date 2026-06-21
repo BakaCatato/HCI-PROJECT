@@ -654,29 +654,145 @@
             background-color: #6d4837;
         }
 
-        .logout-btn {
-            position: absolute;
+        /* ===== Profile Dropdown ===== */
+        .profile-dropdown-wrapper {
+            position: fixed;
             top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 25px;
-            padding: 8px 18px;
-            font-size: 13px;
-            font-weight: 500;
-            font-family: "Poppins", sans-serif;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: white;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            right: 160px;
+            z-index: 1000;
         }
 
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.4);
-            transform: scale(1.05);
+        .profile-btn {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: #6d4837;
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .profile-btn:hover {
+            background: #56372a;
+            transform: scale(1.1);
+        }
+
+        .profile-btn:active {
+            transform: scale(0.95);
+        }
+
+        .profile-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            min-width: 220px;
+            background: rgba(109, 72, 55, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+            padding: 8px 0;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-8px) scale(0.96);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .profile-dropdown-menu.open {
+            display: block;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .dropdown-user-info {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            margin-bottom: 4px;
+        }
+
+        .dropdown-user-info .username {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .dropdown-user-info .user-role {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 2px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: "Poppins", sans-serif;
+            color: rgba(255, 255, 255, 0.85);
+            background: transparent;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease;
+            text-align: left;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .dropdown-item svg {
+            flex-shrink: 0;
+            opacity: 0.7;
+        }
+
+        .dropdown-item:hover svg {
+            opacity: 1;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 4px 0;
+        }
+
+        .dropdown-item.logout-item {
+            color: #ffb3b3;
+        }
+
+        .dropdown-item.logout-item:hover {
+            background: rgba(255, 100, 100, 0.12);
+            color: #ff8b8b;
+        }
+
+        /* Dark Mode – Profile Dropdown */
+        body.dark-mode .profile-btn {
+            background: #3d261d;
+        }
+
+        body.dark-mode .profile-btn:hover {
+            background: #56372a;
+        }
+
+        body.dark-mode .profile-dropdown-menu {
+            background: rgba(30, 20, 15, 0.92);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        body.dark-mode .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.06);
         }
 
         @media (max-width: 900px) {
@@ -708,6 +824,18 @@
             }
             .recently-purchased-btn {
                 right: 65px;
+            }
+            .profile-dropdown-wrapper {
+                top: 10px;
+                right: 120px;
+            }
+            .profile-btn {
+                width: 45px;
+                height: 45px;
+            }
+            .profile-btn svg {
+                width: 20px;
+                height: 20px;
             }
             .search-bar {
                 font-size: 14px;
