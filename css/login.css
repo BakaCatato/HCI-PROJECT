@@ -623,65 +623,294 @@
             pointer-events: auto;
         }
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 900px) {
-            #login-page {
-                flex-direction: column;
-            }
 
+        /* ============================================================
+           RESPONSIVE DESIGN – login.css
+           Breakpoints:
+             Desktop  1025px+    (base: two-panel side-by-side)
+             Laptop   769–1024px (slightly tighter)
+             Tablet   481–768px  (stacked, brand panel as top strip)
+             Mobile   ≤ 480px    (compact, full-width card)
+           ============================================================ */
+
+        /* ---- LAPTOP (769px – 1024px) ---- */
+        @media (max-width: 1024px) {
             .login-left {
-                padding: 40px 30px 30px;
-                text-align: center;
-                align-items: center;
+                padding: 50px 40px;
             }
 
             .brand-title {
-                font-size: 36px;
+                font-size: 44px;
             }
 
             .brand-subtitle {
-                font-size: 15px;
+                font-size: 16px;
             }
 
             .brand-description {
                 font-size: 14px;
+            }
+
+            .login-right {
+                padding: 36px 30px;
+            }
+
+            .login-card {
+                padding: 40px 34px;
+            }
+
+            .loader-logo {
+                font-size: 40px;
+            }
+        }
+
+        /* ---- TABLET (481px – 768px) ---- */
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto; /* allow scroll on stacked layout */
+            }
+
+            /* Loading screen */
+            #loading-screen {
+                padding: 20px;
+            }
+
+            .loader-logo {
+                font-size: 36px;
+            }
+
+            .loader-tagline {
+                font-size: 12px;
+                letter-spacing: 4px;
+            }
+
+            .guitar-strings {
+                height: 60px;
+                gap: 8px;
+            }
+
+            .guitar-string:nth-child(1) { height: 22px; }
+            .guitar-string:nth-child(2) { height: 38px; }
+            .guitar-string:nth-child(3) { height: 54px; }
+            .guitar-string:nth-child(4) { height: 46px; }
+            .guitar-string:nth-child(5) { height: 30px; }
+            .guitar-string:nth-child(6) { height: 42px; }
+
+            .brand-icon.loader-icon {
+                width: 70px;
+                height: 70px;
+            }
+
+            /* Login page — stacked layout */
+            #login-page {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            /* Left brand panel — compact strip */
+            .login-left {
+                flex: none;
+                padding: 30px 30px 24px;
+                align-items: center;
                 text-align: center;
+            }
+
+            .brand-icon {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 14px;
+            }
+
+            .brand-title {
+                font-size: 34px;
+                margin-bottom: 6px;
+            }
+
+            .brand-subtitle {
+                font-size: 14px;
+                margin-bottom: 16px;
+            }
+
+            .brand-description {
+                font-size: 13px;
+                max-width: 100%;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .brand-features {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .feature-item {
+                font-size: 12px;
+            }
+
+            .feature-icon {
+                width: 34px;
+                height: 34px;
+                font-size: 16px;
+            }
+
+            /* Right form panel */
+            .login-right {
+                flex: none;
+                padding: 30px 24px 40px;
+                min-height: 0;
+            }
+
+            .login-card {
+                max-width: 100%;
+                padding: 34px 28px;
+            }
+
+            .login-card h2 {
+                font-size: 24px;
+            }
+        }
+
+        /* ---- MOBILE (≤ 480px) ---- */
+        @media (max-width: 480px) {
+            body {
+                overflow-y: auto;
+            }
+
+            /* Loading screen */
+            .loader-logo {
+                font-size: 30px;
+                letter-spacing: 2px;
+            }
+
+            .loader-tagline {
+                font-size: 10px;
+                letter-spacing: 3px;
+                margin-bottom: 30px;
+            }
+
+            .guitar-strings {
+                height: 50px;
+                gap: 6px;
+                margin-bottom: 26px;
+            }
+
+            .progress-container {
+                width: 180px;
+            }
+
+            .brand-icon.loader-icon {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 10px;
+            }
+
+            /* Login page — full single column */
+            #login-page {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            /* Left brand panel — minimal strip */
+            .login-left {
+                flex: none;
+                padding: 24px 16px 20px;
+                align-items: center;
+                text-align: center;
+            }
+
+            .brand-icon {
+                width: 52px;
+                height: 52px;
+                margin-bottom: 10px;
+            }
+
+            .brand-title {
+                font-size: 26px;
+                margin-bottom: 4px;
+            }
+
+            .brand-subtitle {
+                font-size: 13px;
+                margin-bottom: 12px;
+            }
+
+            .brand-description {
+                display: none; /* save space on very small screens */
             }
 
             .brand-features {
                 display: none;
             }
 
+            /* Right form panel */
             .login-right {
-                padding: 30px 20px 40px;
+                flex: none;
+                padding: 24px 14px 36px;
             }
 
             .login-card {
-                padding: 35px 28px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .brand-title {
-                font-size: 28px;
-            }
-
-            .brand-description {
-                display: none;
-            }
-
-            .login-card {
-                padding: 30px 22px;
+                max-width: 100%;
+                padding: 26px 20px;
                 border-radius: 18px;
             }
 
             .login-card h2 {
-                font-size: 22px;
+                font-size: 20px;
+            }
+
+            .login-card .form-subtitle {
+                font-size: 12px;
+                margin-bottom: 22px;
+            }
+
+            .input-group {
+                margin-bottom: 16px;
+            }
+
+            .input-group label {
+                font-size: 12px;
+            }
+
+            .input-group input {
+                font-size: 13px;
+                padding: 12px 14px 12px 40px;
             }
 
             .form-options {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 10px;
+                gap: 8px;
+                margin-bottom: 18px;
             }
-        }
+
+            .btn-login {
+                font-size: 14px;
+                padding: 13px;
+            }
+
+            .divider {
+                margin: 16px 0;
+            }
+
+            .btn-guest {
+                font-size: 13px;
+                padding: 12px;
+            }
+
+            .signup-link {
+                font-size: 12px;
+                margin-top: 18px;
+            }
+
+            /* Toast */
+            #login-toast {
+                bottom: 16px;
+                right: 16px;
+                font-size: 13px;
+                padding: 12px 18px;
+            }
+        }
