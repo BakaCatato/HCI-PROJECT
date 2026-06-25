@@ -392,6 +392,7 @@ body {
     transition: all 0.35s ease;
     box-shadow: 0 8px 30px rgba(212, 168, 140, 0.25);
     animation: fadeInUp 0.7s ease 0.55s both;
+    cursor: pointer;
 }
 
 .hero-cta:hover {
@@ -413,6 +414,10 @@ body {
 /* =============================================
    3. FILTER PILLS
    ============================================= */
+#collection-section {
+    scroll-margin-top: 100px;
+}
+
 .search-filter-container {
     padding: 60px 32px 10px;
     text-align: center;
@@ -811,32 +816,111 @@ input[type="radio"] {
 
 .item-list li {
     background: rgba(255, 255, 255, 0.08);
-    padding: 14px 16px;
+    padding: 12px;
     margin: 10px 0;
     border-radius: 12px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 14px;
     color: white;
     font-size: 14px;
     border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.item-list button {
-    background: rgba(255, 255, 255, 0.12);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    padding: 6px 14px;
+/* New cart item styles */
+.cart-item-img {
+    width: 50px;
+    height: 50px;
     border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    font-size: 12px;
-    font-family: "Poppins", sans-serif;
+    object-fit: cover;
+    background: #f0e9e3;
+    flex-shrink: 0;
 }
 
-.item-list button:hover {
-    background: rgba(255, 100, 100, 0.2);
-    border-color: rgba(255, 100, 100, 0.3);
+.cart-item-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cart-item-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.3;
+}
+
+.cart-item-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: #d4a88c;
+}
+
+.cart-item-remove {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cart-item-remove:hover {
+    color: #ffb3b3;
+    transform: scale(1.1);
+}
+
+/* Cart Footer */
+.cart-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding-top: 20px;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cart-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.cart-total-price {
+    font-size: 20px;
+    font-weight: 800;
+    color: #d4a88c;
+}
+
+.cart-checkout-btn {
+    width: 100%;
+    padding: 14px 0;
+    background: linear-gradient(135deg, #d4a88c 0%, #b38b76 100%);
+    color: #1a1411;
+    border: none;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    box-shadow: 0 8px 30px rgba(212, 168, 140, 0.25);
+}
+
+.cart-checkout-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 40px rgba(212, 168, 140, 0.4);
+    background: linear-gradient(135deg, #e0bba4 0%, #c49d88 100%);
+}
+
+.cart-checkout-btn:active {
+    transform: translateY(0);
 }
 
 
@@ -1183,6 +1267,14 @@ body.dark-mode .side-panel {
 body.dark-mode .item-list li {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.04);
+}
+
+body.dark-mode .cart-footer {
+    border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+body.dark-mode .cart-item-name {
+    color: #e8e0da;
 }
 
 
