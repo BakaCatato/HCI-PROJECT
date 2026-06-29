@@ -345,7 +345,7 @@
         <label for="address">Address</label>
         <input type="text" id="address" placeholder="Enter delivery address">
         <label for="cellphone">Cellphone Number</label>
-        <input type="text" id="cellphone" placeholder="e.g. 09123456789">
+        <input type="tel" id="cellphone" placeholder="e.g. 09123456789" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
         <button onclick="proceedPurchase()">Proceed to Buy</button>
     </div>
 
@@ -750,7 +750,7 @@
                         <span>Total:</span>
                         <span class="cart-total-price">${formattedTotal}</span>
                     </div>
-                    <button class="cart-checkout-btn" onclick="showToast('Checkout flow coming soon!', 'success')">Checkout</button>
+                    <button class="cart-checkout-btn" onclick="checkoutCart()">Checkout</button>
                 `;
                 cartPanel.appendChild(footer);
             }
@@ -811,9 +811,22 @@
 
         // BUY NOW / PURCHASE LOGIC
         let selectedGuitar = "";
+        let isCartCheckout = false;
 
         function buyNow(guitarName) {
+            isCartCheckout = false;
             selectedGuitar = guitarName;
+            document.getElementById("buy-now-modal").style.display = "block";
+            document.getElementById("overlay").style.display = "block";
+            closeAllPanels();
+        }
+
+        function checkoutCart() {
+            if (cart.length === 0) {
+                showToast('Your cart is empty! ⚠️', 'error');
+                return;
+            }
+            isCartCheckout = true;
             document.getElementById("buy-now-modal").style.display = "block";
             document.getElementById("overlay").style.display = "block";
             closeAllPanels();
@@ -879,35 +892,64 @@
         }
 
         function proceedPurchase() {
-            const name = document.getElementById("name").value;
-            const address = document.getElementById("address").value;
-            const cellphone = document.getElementById("cellphone").value;
+            const name = document.getElementById("name").value.trim();
+            const address = document.getElementById("address").value.trim();
+            const cellphone = document.getElementById("cellphone").value.trim();
 
-            if (name && address && cellphone) {
-                purchasedItems.push(selectedGuitar);
-                localStorage.setItem('gnc_purchased', JSON.stringify(purchasedItems));
-
-                // Populate receipt
-                document.getElementById("receipt-order-id").textContent = generateOrderId();
-                document.getElementById("receipt-name").textContent = name;
-                document.getElementById("receipt-phone").textContent = cellphone;
-                document.getElementById("receipt-address").textContent = address;
-
-                // Update purchased items display
-                updatePurchasedItems();
-
-                // Show confirmation modal
-                document.getElementById("buy-now-modal").style.display = "none";
-                document.getElementById("confirmed-guitar").textContent = selectedGuitar;
-                document.getElementById("confirmed-address").textContent = address;
-                document.getElementById("confirmed-cellphone").textContent = cellphone;
-                document.getElementById("confirmation-modal").style.display = "block";
-
-                // Start live tracking
-                startOrderTracking();
-            } else {
+            // Validate all fields are filled
+            if (!name || !address || !cellphone) {
                 showToast("Please fill out all fields before proceeding! ⚠️", "error");
+                return;
             }
+
+            // Validate cellphone: must be exactly 11 digits and start with "09"
+            if (cellphone.length !== 11 || !cellphone.startsWith('09')) {
+                showToast('Phone number must be 11 digits starting with 09! 📱', 'error');
+                return;
+            }
+
+            // Determine what was purchased
+            let confirmedGuitarText = '';
+
+            if (isCartCheckout) {
+                // Cart checkout — add all cart items to purchased
+                cart.forEach(item => purchasedItems.push(item));
+                confirmedGuitarText = cart.length === 1 ? cart[0] : `all ${cart.length} items in your cart`;
+
+                // Empty the cart
+                cart = [];
+                localStorage.setItem('gnc_cart', JSON.stringify(cart));
+                updateCart();
+            } else {
+                // Single item buy-now
+                purchasedItems.push(selectedGuitar);
+                confirmedGuitarText = selectedGuitar;
+            }
+
+            // Save purchased items
+            localStorage.setItem('gnc_purchased', JSON.stringify(purchasedItems));
+
+            // Populate receipt
+            document.getElementById("receipt-order-id").textContent = generateOrderId();
+            document.getElementById("receipt-name").textContent = name;
+            document.getElementById("receipt-phone").textContent = cellphone;
+            document.getElementById("receipt-address").textContent = address;
+
+            // Update purchased items display
+            updatePurchasedItems();
+
+            // Show confirmation modal
+            document.getElementById("buy-now-modal").style.display = "none";
+            document.getElementById("confirmed-guitar").textContent = confirmedGuitarText;
+            document.getElementById("confirmed-address").textContent = address;
+            document.getElementById("confirmed-cellphone").textContent = cellphone;
+            document.getElementById("confirmation-modal").style.display = "block";
+
+            // Start live tracking
+            startOrderTracking();
+
+            // Reset flag
+            isCartCheckout = false;
         }
 
         function startOrderTracking() {
