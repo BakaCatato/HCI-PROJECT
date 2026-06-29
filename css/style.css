@@ -1061,7 +1061,15 @@ input[type="radio"] {
 
 .coupon-status {
     min-height: 0;
-    transition: all 0.3s ease;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, margin-top 0.3s ease;
+    margin-top: 0;
+}
+
+.coupon-status:not(:empty) {
+    max-height: 30px;
+    margin-top: 4px;
 }
 
 .coupon-valid {
@@ -1072,6 +1080,7 @@ input[type="radio"] {
     font-weight: 600;
     color: #a8e6cf;
     letter-spacing: 0.3px;
+    white-space: nowrap;
     animation: fadeInUp 0.3s ease both;
 }
 
@@ -1083,6 +1092,7 @@ input[type="radio"] {
     font-weight: 600;
     color: #ff8b94;
     letter-spacing: 0.3px;
+    white-space: nowrap;
     animation: fadeInUp 0.3s ease both;
 }
 

@@ -365,6 +365,17 @@
             renderGuitars();
             updateCart();
             updatePurchasedItems();
+
+            // Enter key triggers coupon apply
+            const couponInput = document.getElementById('coupon-input');
+            if (couponInput) {
+                couponInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyCoupon();
+                    }
+                });
+            }
         });
 
         // RENDER GUITAR CARDS (Premium Template)
