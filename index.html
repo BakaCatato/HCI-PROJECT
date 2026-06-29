@@ -15,7 +15,7 @@
 
 <body>
 
-    <!-- ============ STICKY NAVBAR ============ -->
+    <!--  STICKY NAVBAR  -->
     <header class="navbar" id="navbar">
         <div class="navbar-inner">
             <!-- Logo -->
@@ -134,7 +134,7 @@
         </div>
     </header>
 
-    <!-- ============ HERO SECTION ============ -->
+    <!--  HERO SECTION  -->
     <section class="hero">
         <div class="hero-overlay"></div>
         <div class="hero-content">
@@ -152,7 +152,7 @@
         </div>
     </section>
 
-    <!-- ============ FILTER PILLS ============ -->
+    <!--  FILTER PILLS  -->
     <section class="search-filter-container" id="collection-section">
         <h2 class="section-title">Our Collection</h2>
         <div class="filter-buttons">
@@ -163,7 +163,7 @@
         </div>
     </section>
 
-    <!-- ============ PRODUCT GRID ============ -->
+    <!--  PRODUCT GRID  -->
     <section class="products-section">
         <div class="container">
             <div class="guitar-grid" id="guitar-grid">
@@ -174,7 +174,7 @@
         </div>
     </section>
 
-    <!-- ============ FOOTER ============ -->
+    <!--  FOOTER  -->
     <footer class="site-footer">
         <div class="footer-inner">
             <div class="footer-brand">
@@ -218,7 +218,7 @@
         </div>
     </footer>
 
-    <!-- ============ SIDE PANELS ============ -->
+    <!--  SIDE PANELS  -->
     <div id="cart-panel" class="side-panel">
         <div class="panel-header">
             <h3>Shopping Cart</h3>
@@ -247,7 +247,7 @@
         <ul id="purchased-items" class="item-list"></ul>
     </div>
 
-    <!-- ============ MODALS ============ -->
+    <!--  MODALS  -->
     <div id="buy-now-modal">
         <h3>Complete Your Purchase</h3>
         <label for="name">Name</label>
@@ -271,10 +271,8 @@
 
     <div id="toast-container"></div>
 
-    <script>
-        // ==========================================
+    <script> 
         // GATEKEEPER LOGIC
-        // ==========================================
         const activeUserStr = localStorage.getItem('gnc_user');
         if (!activeUserStr) {
             window.location.href = 'login.html';
@@ -305,9 +303,8 @@
             { name: "GnC Studio Pro 5-String Bass", price: "₱21,000", category: "bass", image: "https://images.unsplash.com/photo-1462965326201-d02e4f455804?w=300&q=80", description: "Extended range for modern pop, gospel, and R&B styles.", cartText: "Save", buyText: "Mine!" }
         ];
 
-        // ==========================================
+
         // THEME
-        // ==========================================
         const currentTheme = localStorage.getItem('gnc_theme');
         if (currentTheme === 'dark') {
             document.body.classList.add('dark-mode');
@@ -337,9 +334,9 @@
             }
         }
 
-        // ==========================================
+
         // GREETING
-        // ==========================================
+   
         function getGreeting() {
             const hour = new Date().getHours();
             if (hour < 12) {
@@ -351,9 +348,7 @@
             }
         }
 
-        // ==========================================
         // DOM READY
-        // ==========================================
         document.addEventListener("DOMContentLoaded", () => {
             const greeting = getGreeting();
             const welcomeTitle = document.getElementById("welcome-title");
@@ -372,9 +367,7 @@
             updatePurchasedItems();
         });
 
-        // ==========================================
         // RENDER GUITAR CARDS (Premium Template)
-        // ==========================================
         function renderGuitars() {
             const grid = document.getElementById('guitar-grid');
             let cardsHTML = '';
@@ -417,9 +410,7 @@
             grid.innerHTML = cardsHTML;
         }
 
-        // ==========================================
         // FILTER LOGIC
-        // ==========================================
         let currentCategoryFilter = 'all';
 
         function setFilter(category, btnElement) {
@@ -464,9 +455,7 @@
             }
         }
 
-        // ==========================================
         // TOAST
-        // ==========================================
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -484,9 +473,8 @@
             }, 3000);
         }
 
-        // ==========================================
+
         // CLICK HANDLER (card deselect, overlay, dropdown)
-        // ==========================================
         document.addEventListener('click', function (event) {
             const isClickInsideCard = event.target.closest('.guitar-card');
             const isClickInsideBuyModal = event.target.closest('#buy-now-modal');
@@ -521,9 +509,7 @@
             }
         });
 
-        // ==========================================
         // GUITAR SELECTION
-        // ==========================================
         function selectGuitar(cardElement) {
             document.querySelectorAll('.guitar-card').forEach(card => {
                 card.classList.remove('selected');
@@ -533,9 +519,7 @@
             if (radio) radio.checked = true;
         }
 
-        // ==========================================
         // PANELS
-        // ==========================================
         function togglePanel(panelId) {
             const panel = document.getElementById(panelId);
             const overlay = document.getElementById('overlay');
@@ -560,9 +544,7 @@
             });
         }
 
-        // ==========================================
         // CART LOGIC
-        // ==========================================
         function addToCart(guitarName) {
             cart.push(guitarName);
             localStorage.setItem('gnc_cart', JSON.stringify(cart));
@@ -682,9 +664,7 @@
             showToast(`Removed: ${removedItem} ❌`, 'error');
         }
 
-        // ==========================================
         // COUPON / PROMO CODE LOGIC
-        // ==========================================
         function applyCoupon() {
             const couponInput = document.getElementById('coupon-input');
             const couponStatus = document.getElementById('coupon-status');
@@ -728,9 +708,7 @@
             }
         }
 
-        // ==========================================
         // BUY NOW / PURCHASE LOGIC
-        // ==========================================
         let selectedGuitar = "";
 
         function buyNow(guitarName) {
@@ -777,9 +755,8 @@
             }
         }
 
-        // ==========================================
+
         // PROFILE DROPDOWN
-        // ==========================================
         function toggleProfileDropdown() {
             const menu = document.getElementById('profile-dropdown-menu');
             menu.classList.toggle('open');
@@ -792,9 +769,7 @@
             if (dropdownRole) dropdownRole.textContent = activeUser.isGuest ? 'Guest' : 'Member';
         }
 
-        // ==========================================
         // LOGOUT
-        // ==========================================
         function logoutUser() {
             localStorage.removeItem('gnc_user');
             showToast('Logged out successfully! 👋', 'success');
