@@ -225,6 +225,18 @@
             <button class="close-btn" onclick="togglePanel('cart-panel')">&times;</button>
         </div>
         <ul id="cart-items" class="item-list"></ul>
+        <!-- Coupon / Promo Code Section -->
+        <div class="coupon-section" id="coupon-section">
+            <div class="coupon-label">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="2" ry="2"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                Promo Code
+            </div>
+            <div class="coupon-input-row">
+                <input type="text" id="coupon-input" placeholder="Enter coupon code..." autocomplete="off">
+                <button id="apply-coupon-btn" onclick="applyCoupon()">Apply</button>
+            </div>
+            <div class="coupon-status" id="coupon-status"></div>
+        </div>
     </div>
 
     <div id="purchased-panel" class="side-panel">
@@ -271,6 +283,8 @@
 
         let cart = JSON.parse(localStorage.getItem('gnc_cart')) || [];
         let purchasedItems = JSON.parse(localStorage.getItem('gnc_purchased')) || [];
+        let discount = 0;
+        let appliedCoupon = '';
 
         // Guitar Database
         const guitarDatabase = [
@@ -560,6 +574,7 @@
         function updateCart() {
             let cartList = document.getElementById("cart-items");
             let cartPanel = document.getElementById("cart-panel");
+            let couponSection = document.getElementById("coupon-section");
             cartList.innerHTML = "";
             let totalAmount = 0;
 
@@ -595,15 +610,59 @@
 
             document.getElementById("cart-count").textContent = cart.length;
 
+            // Show/hide coupon section based on cart contents
+            if (couponSection) {
+                couponSection.style.display = cart.length > 0 ? 'flex' : 'none';
+            }
+
+            // Reset discount if cart is emptied
+            if (cart.length === 0) {
+                discount = 0;
+                appliedCoupon = '';
+                let couponInput = document.getElementById('coupon-input');
+                let couponStatus = document.getElementById('coupon-status');
+                if (couponInput) { couponInput.value = ''; couponInput.disabled = false; }
+                if (couponStatus) couponStatus.innerHTML = '';
+                let applyBtn = document.getElementById('apply-coupon-btn');
+                if (applyBtn) { applyBtn.textContent = 'Apply'; applyBtn.classList.remove('applied'); }
+            }
+
+            // Recalculate discount amount based on current total
+            if (appliedCoupon === 'GNC2026') {
+                discount = totalAmount * 0.10;
+            } else {
+                discount = 0;
+            }
+
             let existingFooter = document.getElementById("cart-footer");
             if (existingFooter) existingFooter.remove();
 
             if (cart.length > 0) {
-                let formattedTotal = '₱' + totalAmount.toLocaleString('en-US');
+                let finalTotal = totalAmount - discount;
+                let formattedSubtotal = '₱' + totalAmount.toLocaleString('en-US');
+                let formattedDiscount = '−₱' + discount.toLocaleString('en-US');
+                let formattedTotal = '₱' + finalTotal.toLocaleString('en-US');
+
                 let footer = document.createElement("div");
                 footer.id = "cart-footer";
                 footer.className = "cart-footer";
+
+                let discountRowHTML = '';
+                if (discount > 0) {
+                    discountRowHTML = `
+                        <div class="cart-total-row cart-subtotal-row">
+                            <span>Subtotal:</span>
+                            <span class="cart-subtotal-price">${formattedSubtotal}</span>
+                        </div>
+                        <div class="cart-total-row cart-discount-row">
+                            <span>Discount (10%):</span>
+                            <span class="cart-discount-price">${formattedDiscount}</span>
+                        </div>
+                    `;
+                }
+
                 footer.innerHTML = `
+                    ${discountRowHTML}
                     <div class="cart-total-row">
                         <span>Total:</span>
                         <span class="cart-total-price">${formattedTotal}</span>
@@ -621,6 +680,52 @@
             updateCart();
 
             showToast(`Removed: ${removedItem} ❌`, 'error');
+        }
+
+        // ==========================================
+        // COUPON / PROMO CODE LOGIC
+        // ==========================================
+        function applyCoupon() {
+            const couponInput = document.getElementById('coupon-input');
+            const couponStatus = document.getElementById('coupon-status');
+            const applyBtn = document.getElementById('apply-coupon-btn');
+            const code = couponInput.value.trim().toUpperCase();
+
+            if (!code) {
+                showToast('Please enter a coupon code! ✏️', 'error');
+                couponInput.focus();
+                return;
+            }
+
+            // If a coupon is already applied, allow removing it
+            if (appliedCoupon && applyBtn.classList.contains('applied')) {
+                appliedCoupon = '';
+                discount = 0;
+                couponInput.value = '';
+                couponInput.disabled = false;
+                couponStatus.innerHTML = '';
+                applyBtn.textContent = 'Apply';
+                applyBtn.classList.remove('applied');
+                updateCart();
+                showToast('Coupon removed!', 'success');
+                return;
+            }
+
+            if (code === 'GNC2026') {
+                appliedCoupon = 'GNC2026';
+                couponInput.disabled = true;
+                applyBtn.textContent = 'Remove';
+                applyBtn.classList.add('applied');
+                couponStatus.innerHTML = '<span class="coupon-valid">✓ GNC2026 — 10% off applied!</span>';
+                updateCart();
+                showToast('Coupon applied! You get 10% off 🎉', 'success');
+            } else {
+                couponStatus.innerHTML = '<span class="coupon-invalid">✕ Invalid coupon code</span>';
+                showToast('Invalid coupon code! ❌', 'error');
+                // Shake animation
+                couponInput.classList.add('shake');
+                setTimeout(() => couponInput.classList.remove('shake'), 500);
+            }
         }
 
         // ==========================================

@@ -949,6 +949,188 @@ input[type="radio"] {
     transform: translateY(0);
 }
 
+/* =============================================
+   COUPON / PROMO CODE SECTION
+   ============================================= */
+.coupon-section {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 18px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    transition: all 0.3s ease;
+}
+
+.coupon-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.coupon-label svg {
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+.coupon-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+#coupon-input {
+    flex: 1;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
+    color: white;
+    outline: none;
+    transition: all 0.3s ease;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+#coupon-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+#coupon-input:focus {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(212, 168, 140, 0.45);
+    box-shadow: 0 0 0 3px rgba(212, 168, 140, 0.1);
+}
+
+#coupon-input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+#apply-coupon-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #d4a88c 0%, #b38b76 100%);
+    color: #1a1411;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(212, 168, 140, 0.2);
+    flex-shrink: 0;
+}
+
+#apply-coupon-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(212, 168, 140, 0.35);
+    background: linear-gradient(135deg, #e0bba4 0%, #c49d88 100%);
+}
+
+#apply-coupon-btn:active {
+    transform: translateY(0);
+}
+
+#apply-coupon-btn.applied {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: none;
+}
+
+#apply-coupon-btn.applied:hover {
+    background: rgba(255, 100, 100, 0.15);
+    color: #ffb3b3;
+    border-color: rgba(255, 100, 100, 0.3);
+    transform: translateY(-1px);
+}
+
+.coupon-status {
+    min-height: 0;
+    transition: all 0.3s ease;
+}
+
+.coupon-valid {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #a8e6cf;
+    letter-spacing: 0.3px;
+    animation: fadeInUp 0.3s ease both;
+}
+
+.coupon-invalid {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ff8b94;
+    letter-spacing: 0.3px;
+    animation: fadeInUp 0.3s ease both;
+}
+
+/* Shake animation for invalid coupon */
+@keyframes couponShake {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-6px); }
+    30% { transform: translateX(5px); }
+    45% { transform: translateX(-4px); }
+    60% { transform: translateX(3px); }
+    75% { transform: translateX(-2px); }
+    90% { transform: translateX(1px); }
+}
+
+#coupon-input.shake {
+    animation: couponShake 0.5s ease;
+    border-color: rgba(255, 139, 148, 0.6) !important;
+}
+
+/* Cart Subtotal & Discount Rows */
+.cart-subtotal-row {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.cart-subtotal-price {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: line-through;
+}
+
+.cart-discount-row {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a8e6cf;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    margin-bottom: 4px;
+}
+
+.cart-discount-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: #a8e6cf;
+}
+
 
 /* =============================================
    MODALS
@@ -1301,6 +1483,21 @@ body.dark-mode .cart-footer {
 
 body.dark-mode .cart-item-name {
     color: #e8e0da;
+}
+
+body.dark-mode .coupon-section {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode #coupon-input {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode #coupon-input:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(212, 168, 140, 0.35);
 }
 
 
