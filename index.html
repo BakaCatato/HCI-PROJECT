@@ -241,10 +241,100 @@
 
     <div id="purchased-panel" class="side-panel">
         <div class="panel-header">
-            <h3>Recently Purchased</h3>
+            <h3>Order Tracking</h3>
             <button class="close-btn" onclick="togglePanel('purchased-panel')">&times;</button>
         </div>
-        <ul id="purchased-items" class="item-list"></ul>
+
+        <!-- Empty State -->
+        <div id="order-empty-state" class="order-empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            <p>No orders yet</p>
+            <span>Your purchases will appear here</span>
+        </div>
+
+        <!-- Digital Receipt (hidden by default) -->
+        <div id="order-receipt" class="order-receipt" style="display:none;">
+            <!-- Receipt Header -->
+            <div class="receipt-header">
+                <div class="receipt-logo">GnC</div>
+                <div class="receipt-order-id" id="receipt-order-id">#GNC-0000</div>
+            </div>
+
+            <!-- Customer Details -->
+            <div class="receipt-section">
+                <div class="receipt-section-title">Customer Details</div>
+                <div class="receipt-detail-row">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span id="receipt-name">—</span>
+                </div>
+                <div class="receipt-detail-row">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    <span id="receipt-phone">—</span>
+                </div>
+                <div class="receipt-detail-row">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span id="receipt-address">—</span>
+                </div>
+            </div>
+
+            <!-- Purchased Items -->
+            <div class="receipt-section">
+                <div class="receipt-section-title">Items Purchased</div>
+                <ul id="purchased-items" class="receipt-items-list"></ul>
+            </div>
+
+            <!-- Receipt Total -->
+            <div class="receipt-total-row" id="receipt-total-row">
+                <span>Total</span>
+                <span id="receipt-total">₱0</span>
+            </div>
+
+            <!-- Status Tracker -->
+            <div class="receipt-section">
+                <div class="receipt-section-title">Live Tracking</div>
+                <div class="order-tracker" id="order-tracker">
+                    <div class="tracker-step active" data-step="0">
+                        <div class="tracker-dot">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div class="tracker-info">
+                            <span class="tracker-label">Order Placed</span>
+                            <span class="tracker-time" id="tracker-time-0">Just now</span>
+                        </div>
+                    </div>
+                    <div class="tracker-connector"><div class="tracker-connector-fill" id="connector-fill-0"></div></div>
+                    <div class="tracker-step" data-step="1">
+                        <div class="tracker-dot">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                        </div>
+                        <div class="tracker-info">
+                            <span class="tracker-label">Preparing Instrument</span>
+                            <span class="tracker-time" id="tracker-time-1">Pending</span>
+                        </div>
+                    </div>
+                    <div class="tracker-connector"><div class="tracker-connector-fill" id="connector-fill-1"></div></div>
+                    <div class="tracker-step" data-step="2">
+                        <div class="tracker-dot">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                        </div>
+                        <div class="tracker-info">
+                            <span class="tracker-label">Out for Delivery</span>
+                            <span class="tracker-time" id="tracker-time-2">Pending</span>
+                        </div>
+                    </div>
+                    <div class="tracker-connector"><div class="tracker-connector-fill" id="connector-fill-2"></div></div>
+                    <div class="tracker-step" data-step="3">
+                        <div class="tracker-dot">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        </div>
+                        <div class="tracker-info">
+                            <span class="tracker-label">Delivered</span>
+                            <span class="tracker-time" id="tracker-time-3">Pending</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!--  MODALS  -->
@@ -738,13 +828,54 @@
         }
 
         function updatePurchasedItems() {
-            let purchasedList = document.getElementById("purchased-items");
+            const purchasedList = document.getElementById("purchased-items");
+            const emptyState = document.getElementById("order-empty-state");
+            const receipt = document.getElementById("order-receipt");
+
             purchasedList.innerHTML = "";
+
+            if (purchasedItems.length === 0) {
+                emptyState.style.display = 'flex';
+                receipt.style.display = 'none';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            receipt.style.display = 'block';
+
+            let receiptTotal = 0;
             purchasedItems.forEach(item => {
+                let guitar = guitarDatabase.find(g => g.name === item);
+                let priceStr = guitar ? guitar.price : '₱0';
+                let imageSrc = guitar ? guitar.image : '';
+                let numericPrice = priceStr.replace(/[₱,]/g, '');
+                let priceValue = parseFloat(numericPrice);
+                if (!isNaN(priceValue)) receiptTotal += priceValue;
+
                 let li = document.createElement("li");
-                li.textContent = item;
+                li.className = "receipt-item";
+                li.innerHTML = `
+                    <img src="${imageSrc}" alt="${item}" class="receipt-item-img">
+                    <div class="receipt-item-details">
+                        <div class="receipt-item-name">${item}</div>
+                        <div class="receipt-item-price">${priceStr}</div>
+                    </div>
+                `;
                 purchasedList.appendChild(li);
             });
+
+            document.getElementById("receipt-total").textContent = '₱' + receiptTotal.toLocaleString('en-US');
+        }
+
+        let trackingInterval = null;
+        let currentTrackingStep = 0;
+
+        function generateOrderId() {
+            return '#GNC-' + (1000 + Math.floor(Math.random() * 9000));
+        }
+
+        function getTimeNow() {
+            return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         }
 
         function proceedPurchase() {
@@ -756,14 +887,89 @@
                 purchasedItems.push(selectedGuitar);
                 localStorage.setItem('gnc_purchased', JSON.stringify(purchasedItems));
 
+                // Populate receipt
+                document.getElementById("receipt-order-id").textContent = generateOrderId();
+                document.getElementById("receipt-name").textContent = name;
+                document.getElementById("receipt-phone").textContent = cellphone;
+                document.getElementById("receipt-address").textContent = address;
+
+                // Update purchased items display
+                updatePurchasedItems();
+
+                // Show confirmation modal
                 document.getElementById("buy-now-modal").style.display = "none";
                 document.getElementById("confirmed-guitar").textContent = selectedGuitar;
                 document.getElementById("confirmed-address").textContent = address;
                 document.getElementById("confirmed-cellphone").textContent = cellphone;
                 document.getElementById("confirmation-modal").style.display = "block";
+
+                // Start live tracking
+                startOrderTracking();
             } else {
                 showToast("Please fill out all fields before proceeding! ⚠️", "error");
             }
+        }
+
+        function startOrderTracking() {
+            // Clear any existing interval
+            if (trackingInterval) clearInterval(trackingInterval);
+
+            // Reset tracker
+            currentTrackingStep = 0;
+            const steps = document.querySelectorAll('.tracker-step');
+            const connectorFills = document.querySelectorAll('.tracker-connector-fill');
+
+            steps.forEach((step, i) => {
+                step.classList.remove('active', 'completed');
+                const timeEl = document.getElementById(`tracker-time-${i}`);
+                if (timeEl) timeEl.textContent = 'Pending';
+            });
+            connectorFills.forEach(fill => {
+                fill.style.width = '0%';
+            });
+
+            // Activate first step
+            steps[0].classList.add('active');
+            document.getElementById('tracker-time-0').textContent = getTimeNow();
+
+            const trackingMessages = [
+                { msg: 'Your order has been placed! 📦', type: 'success' },
+                { msg: 'Your guitar is being prepared! 🔧', type: 'success' },
+                { msg: 'Your guitar is out for delivery! 🚚', type: 'success' },
+                { msg: 'Your guitar has been delivered! 🎉', type: 'success' }
+            ];
+
+            trackingInterval = setInterval(() => {
+                if (currentTrackingStep >= 3) {
+                    clearInterval(trackingInterval);
+                    trackingInterval = null;
+                    return;
+                }
+
+                // Complete current step
+                steps[currentTrackingStep].classList.remove('active');
+                steps[currentTrackingStep].classList.add('completed');
+
+                // Fill connector between current and next step
+                const connectorFill = document.getElementById(`connector-fill-${currentTrackingStep}`);
+                if (connectorFill) connectorFill.style.width = '100%';
+
+                // Advance to next step
+                currentTrackingStep++;
+                steps[currentTrackingStep].classList.add('active');
+                document.getElementById(`tracker-time-${currentTrackingStep}`).textContent = getTimeNow();
+
+                // Show toast
+                showToast(trackingMessages[currentTrackingStep].msg, trackingMessages[currentTrackingStep].type);
+
+                // If final step, mark it completed after a short delay
+                if (currentTrackingStep === 3) {
+                    setTimeout(() => {
+                        steps[3].classList.remove('active');
+                        steps[3].classList.add('completed');
+                    }, 1500);
+                }
+            }, 4000);
         }
 
 
