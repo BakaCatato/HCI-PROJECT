@@ -355,13 +355,6 @@
     <script
       defer
       crossorigin="anonymous"
-      src="https://national-pegasus-60.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"
-      type="text/javascript">
-    </script>
-    
-    <script
-      defer
-      crossorigin="anonymous"
       data-clerk-publishable-key="pk_test_bmF0aW9uYWwtcGVnYXN1cy02MC5jbGVyay5hY2NvdW50cy5kZXYk"
       src="https://national-pegasus-60.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
       type="text/javascript">
@@ -369,12 +362,31 @@
 
     <script>
         // ==========================================
+        // MODULE-LEVEL SIGNUP REFERENCE
+        // Stores the active sign-up object so the
+        // verification step can always reference it.
+        // ==========================================
+        let activeClerkSignUp = null;
+
+        // ==========================================
         // CLERK INITIALIZATION
         // ==========================================
         window.addEventListener('load', async function () {
             await window.Clerk.load();
             
             if (window.Clerk.user) {
+                // Active session found (e.g. returning from OAuth redirect
+                // or browser still has a valid session).
+                // Always sync gnc_user so the index.html gatekeeper lets them in.
+                const user = window.Clerk.user;
+                localStorage.setItem('gnc_user', JSON.stringify({
+                    username: user.username
+                          || user.firstName
+                          || user.primaryEmailAddress?.emailAddress?.split('@')[0]
+                          || 'User',
+                    email: user.primaryEmailAddress?.emailAddress || '',
+                    isGuest: false
+                }));
                 window.location.href = 'index.html';
             }
         });
@@ -448,7 +460,19 @@
 
                 if (res.status === 'complete') {
                     await window.Clerk.setActive({ session: res.createdSessionId });
-                    showToast(`Welcome back!`);
+
+                    // Sync gnc_user so index.html gatekeeper recognises this session
+                    const user = window.Clerk.user;
+                    localStorage.setItem('gnc_user', JSON.stringify({
+                        username: user?.username
+                               || user?.firstName
+                               || identifier.split('@')[0]
+                               || 'User',
+                        email: user?.primaryEmailAddress?.emailAddress || identifier,
+                        isGuest: false
+                    }));
+
+                    showToast('Welcome back!');
                     setTimeout(() => {
                         window.location.href = 'index.html';
                     }, 1200);
@@ -462,9 +486,8 @@
                 console.error(err);
                 let message = 'An error occurred during sign in.';
                 if (err.errors && err.errors.length > 0) {
-                     message = err.errors[0].longMessage || err.errors[0].message;
+                    message = err.errors[0].longMessage || err.errors[0].message;
                 }
-                
                 errorText.textContent = message;
                 errorMsg.classList.add('show');
                 btnLogin.textContent = 'Sign In';
@@ -649,14 +672,36 @@
             btnSignup.disabled = true;
 
             try {
-                 const res = await window.Clerk.client.signUp.create({
+                // Split full name into first / last for Clerk's user profile
+                const nameParts = fullname.split(' ');
+                const firstName = nameParts[0];
+                const lastName  = nameParts.slice(1).join(' ') || undefined;
+
+                // Store the signUp object so handleVerification can always reach it
+                activeClerkSignUp = await window.Clerk.client.signUp.create({
                     emailAddress: email,
                     password: password,
                     username: username,
+                    firstName: firstName,
+                    ...(lastName && { lastName: lastName }),
                 });
 
-                await res.prepareEmailAddressVerification({ strategy: "email_code" });
-                
+                // If Clerk dashboard has email verification OFF, status is already 'complete'
+                if (activeClerkSignUp.status === 'complete') {
+                    await window.Clerk.setActive({ session: activeClerkSignUp.createdSessionId });
+                    localStorage.setItem('gnc_user', JSON.stringify({
+                        username: username || firstName,
+                        email: email,
+                        isGuest: false
+                    }));
+                    showToast('Account created successfully!');
+                    setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+                    return;
+                }
+
+                // Email verification IS required — send the code
+                await activeClerkSignUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+
                 showToast('Code sent! Please check your email.');
                 btnSignup.textContent = 'Create Account';
                 btnSignup.disabled = false;
@@ -681,21 +726,20 @@
                 }, 400);
 
             } catch (err) {
-                 console.error(err);
-                 let message = 'An error occurred during sign up.';
-                 if (err.errors && err.errors.length > 0) {
-                     message = err.errors[0].longMessage || err.errors[0].message;
-                 }
-                 
-                 errorText.textContent = message;
-                 errorMsg.classList.add('show');
-                 btnSignup.textContent = 'Create Account';
-                 btnSignup.disabled = false;
+                console.error(err);
+                let message = 'An error occurred during sign up.';
+                if (err.errors && err.errors.length > 0) {
+                    message = err.errors[0].longMessage || err.errors[0].message;
+                }
+                errorText.textContent = message;
+                errorMsg.classList.add('show');
+                btnSignup.textContent = 'Create Account';
+                btnSignup.disabled = false;
             }
         }
 
         // ==========================================
-        // OTP VERIFICATION LOGIC (NEW)
+        // OTP VERIFICATION LOGIC
         // ==========================================
         async function handleVerification(event) {
             event.preventDefault();
@@ -717,10 +761,32 @@
             btnVerify.disabled = true;
 
             try {
-                const res = await window.Clerk.client.signUp.attemptEmailAddressVerification({ code });
+                // Prefer the stored reference — falls back to client.signUp
+                // in case the page was refreshed mid-flow
+                const signUpRef = activeClerkSignUp || window.Clerk.client.signUp;
+
+                if (!signUpRef) {
+                    errorText.textContent = 'Session expired. Please sign up again.';
+                    errorMsg.classList.add('show');
+                    btnVerify.textContent = 'Verify Account';
+                    btnVerify.disabled = false;
+                    return;
+                }
+
+                const res = await signUpRef.attemptEmailAddressVerification({ code });
                 
                 if (res.status === 'complete') {
                     await window.Clerk.setActive({ session: res.createdSessionId });
+
+                    // Sync gnc_user so index.html gatekeeper lets this new user in
+                    const user = window.Clerk.user;
+                    const savedUsername = document.getElementById('signup-username')?.value?.trim();
+                    localStorage.setItem('gnc_user', JSON.stringify({
+                        username: user?.username || savedUsername || user?.firstName || 'User',
+                        email: user?.primaryEmailAddress?.emailAddress || '',
+                        isGuest: false
+                    }));
+
                     showToast('Account verified successfully!');
                     setTimeout(() => {
                         window.location.href = 'index.html';
@@ -734,9 +800,9 @@
                 }
             } catch (err) {
                 console.error(err);
-                let message = 'Invalid code. Please try again.';
+                let message = 'Invalid or expired code. Please try again.';
                 if (err.errors && err.errors.length > 0) {
-                     message = err.errors[0].longMessage || err.errors[0].message;
+                    message = err.errors[0].longMessage || err.errors[0].message;
                 }
                 errorText.textContent = message;
                 errorMsg.classList.add('show');
