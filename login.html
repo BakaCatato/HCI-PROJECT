@@ -355,6 +355,12 @@
     <script
       defer
       crossorigin="anonymous"
+      src="https://national-pegasus-60.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"
+      type="text/javascript">
+    </script>
+    <script
+      defer
+      crossorigin="anonymous"
       data-clerk-publishable-key="pk_test_bmF0aW9uYWwtcGVnYXN1cy02MC5jbGVyay5hY2NvdW50cy5kZXYk"
       src="https://national-pegasus-60.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
       type="text/javascript">
@@ -368,25 +374,33 @@
         // ==========================================
         let activeClerkSignUp = null;
 
-        // ==========================================
-        // CLERK INITIALIZATION
+       // ==========================================
+        // CLERK INITIALIZATION & OAUTH CALLBACK
         // ==========================================
         window.addEventListener('load', async function () {
             await window.Clerk.load();
             
+            // MAGIC FIX: Process the OAuth callback if returning from Google/Facebook
+            if (window.location.href.includes('__clerk_status') || window.location.search.includes('state=')) {
+                try {
+                    await window.Clerk.handleRedirectCallback();
+                } catch (err) {
+                    console.error("Clerk OAuth Callback Error:", err);
+                }
+            }
+            
+            // Check if user is now fully logged in
             if (window.Clerk.user) {
-                // Active session found (e.g. returning from OAuth redirect
-                // or browser still has a valid session).
-                // Always sync gnc_user so the index.html gatekeeper lets them in.
                 const user = window.Clerk.user;
                 localStorage.setItem('gnc_user', JSON.stringify({
-                    username: user.username
-                          || user.firstName
-                          || user.primaryEmailAddress?.emailAddress?.split('@')[0]
-                          || 'User',
+                    username: user.username 
+                              || user.firstName 
+                              || user.primaryEmailAddress?.emailAddress?.split('@')[0] 
+                              || 'User',
                     email: user.primaryEmailAddress?.emailAddress || '',
                     isGuest: false
                 }));
+                // Diretso na sa Shop!
                 window.location.href = 'index.html';
             }
         });
@@ -495,19 +509,36 @@
             }
         }
 
-        // ==========================================
+       // ==========================================
         // SOCIAL LOGIN LOGIC
         // ==========================================
         async function handleSocialLogin(strategy) {
+            // Disable buttons to prevent double-click
+            document.querySelectorAll('.btn-social').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+
             try {
+                // Get clean URL (removes any existing # or ? tags to avoid loop bugs)
+                const cleanUrl = window.location.origin + window.location.pathname;
+
                 await window.Clerk.client.signIn.authenticateWithRedirect({
                     strategy: strategy,
-                    redirectUrl: window.location.href,
-                    redirectUrlComplete: window.location.origin + '/index.html'
+                    redirectUrl: cleanUrl, 
+                    redirectUrlComplete: cleanUrl 
                 });
             } catch (err) {
                 console.error('Social login error:', err);
-                showToast('Error connecting to provider.');
+                document.querySelectorAll('.btn-social').forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.opacity = '';
+                });
+                let message = 'Error connecting to provider.';
+                if (err.errors && err.errors.length > 0) {
+                    message = err.errors[0].longMessage || err.errors[0].message;
+                }
+                showToast(message);
             }
         }
 
