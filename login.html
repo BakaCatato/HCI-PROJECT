@@ -520,13 +520,14 @@
             });
 
             try {
-                // Get clean URL (removes any existing # or ? tags to avoid loop bugs)
-                const cleanUrl = window.location.origin + window.location.pathname;
+                // Route OAuth callback directly to index.html to avoid login redirect loop
+                const targetUrl = window.location.origin + window.location.pathname.replace('login.html', 'index.html');
 
                 await window.Clerk.client.signIn.authenticateWithRedirect({
                     strategy: strategy,
-                    redirectUrl: cleanUrl, 
-                    redirectUrlComplete: cleanUrl 
+                    redirectUrl: targetUrl,
+                    redirectUrlComplete: targetUrl,
+                    signUpFallbackRedirectUrl: targetUrl
                 });
             } catch (err) {
                 console.error('Social login error:', err);
