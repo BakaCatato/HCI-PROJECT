@@ -374,16 +374,35 @@
         window.addEventListener('load', async function () {
             await window.Clerk.load();
             
-            // MAGIC FIX: Process the OAuth callback if returning from Google/Facebook
-            if (window.location.href.includes('__clerk_status') || window.location.search.includes('state=')) {
+            // Process OAuth callback if returning from Google/Facebook/GitHub
+            if (window.location.search.includes('__clerk') || window.location.search.includes('state=')) {
                 try {
-                    await window.Clerk.handleRedirectCallback();
+                    // Tell Clerk WHERE to go after processing the callback
+                    await window.Clerk.handleRedirectCallback({
+                        signInForceRedirectUrl: 'index.html',
+                        signUpForceRedirectUrl: 'index.html',
+                    });
                 } catch (err) {
                     console.error("Clerk OAuth Callback Error:", err);
+
+                    // NEW USER FALLBACK: If sign-in failed because user is new,
+                    // the sign-up transfer data is on Clerk.client.signUp.
+                    // Try to complete the sign-up explicitly.
+                    const su = window.Clerk.client?.signUp;
+                    if (su && su.verifications?.externalAccount?.status === 'verified') {
+                        try {
+                            const result = await su.create({ transfer: true });
+                            if (result.status === 'complete' && result.createdSessionId) {
+                                await window.Clerk.setActive({ session: result.createdSessionId });
+                            }
+                        } catch (e) {
+                            console.error("Sign-up transfer error:", e);
+                        }
+                    }
                 }
             }
             
-            // Check if user is now fully logged in
+            // FALLBACK: If Clerk finished but didn't navigate, save session and redirect manually
             if (window.Clerk.user) {
                 const user = window.Clerk.user;
                 localStorage.setItem('gnc_user', JSON.stringify({
@@ -514,14 +533,14 @@
             });
 
             try {
-                // Route OAuth callback directly to index.html to avoid login redirect loop
-                const targetUrl = window.location.origin + window.location.pathname.replace('login.html', 'index.html');
+                const currentUrl = window.location.origin + window.location.pathname; // login.html
+                const shopUrl = currentUrl.replace('login.html', 'index.html');       // index.html
 
                 await window.Clerk.client.signIn.authenticateWithRedirect({
                     strategy: strategy,
-                    redirectUrl: targetUrl,
-                    redirectUrlComplete: targetUrl,
-                    signUpFallbackRedirectUrl: targetUrl
+                    redirectUrl: currentUrl,               // Come BACK here to process callback
+                    redirectUrlComplete: shopUrl,           // Go to shop after success
+                    signUpFallbackRedirectUrl: currentUrl   // New users also come back here
                 });
             } catch (err) {
                 console.error('Social login error:', err);

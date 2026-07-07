@@ -366,6 +366,15 @@
         <button onclick="closeConfirmation()">Awesome!</button>
     </div>
 
+    <!-- GUEST GATE MODAL -->
+    <div id="guest-gate-modal">
+        <div class="guest-gate-icon">🔒</div>
+        <h3>Account Required</h3>
+        <p>Hey there, Guest! You can browse and add items to your cart, but you'll need an account to complete a purchase.</p>
+        <button onclick="window.location.href='login.html'" class="guest-gate-primary">Create an Account</button>
+        <button onclick="closeGuestGate()" class="guest-gate-secondary">Continue Browsing</button>
+    </div>
+
     <div id="overlay"></div>
 
     <div id="toast-container"></div>
@@ -585,6 +594,7 @@
             const isClickInsideCard = event.target.closest('.guitar-card');
             const isClickInsideBuyModal = event.target.closest('#buy-now-modal');
             const isClickInsideConfModal = event.target.closest('#confirmation-modal');
+            const isClickInsideGuestModal = event.target.closest('#guest-gate-modal');
             const isClickInsidePanel = event.target.closest('.side-panel');
             const isClickOnCartBtn = event.target.closest('.shopping-cart-btn');
             const isClickOnShopBtn = event.target.closest('.recently-purchased-btn');
@@ -597,7 +607,7 @@
                 if (menu) menu.classList.remove('open');
             }
 
-            if (!isClickInsideCard && !isClickInsideBuyModal && !isClickInsideConfModal && !isClickInsidePanel && !isClickOnCartBtn && !isClickOnShopBtn && !isClickInsideSearch && !isClickOnThemeBtn && !isClickOnProfileDropdown) {
+            if (!isClickInsideCard && !isClickInsideBuyModal && !isClickInsideConfModal && !isClickInsideGuestModal && !isClickInsidePanel && !isClickOnCartBtn && !isClickOnShopBtn && !isClickInsideSearch && !isClickOnThemeBtn && !isClickOnProfileDropdown) {
                 document.querySelectorAll('.guitar-card').forEach(card => {
                     card.classList.remove('selected');
                 });
@@ -611,6 +621,7 @@
                 closeAllPanels();
                 document.getElementById('buy-now-modal').style.display = 'none';
                 document.getElementById('confirmation-modal').style.display = 'none';
+                document.getElementById('guest-gate-modal').style.display = 'none';
                 document.getElementById('overlay').style.display = 'none';
             }
         });
@@ -819,6 +830,13 @@
         let isCartCheckout = false;
 
         function buyNow(guitarName) {
+            // Block guests from purchasing
+            if (activeUser && activeUser.isGuest) {
+                document.getElementById('guest-gate-modal').style.display = 'block';
+                document.getElementById('overlay').style.display = 'block';
+                closeAllPanels();
+                return;
+            }
             isCartCheckout = false;
             selectedGuitar = guitarName;
             document.getElementById("buy-now-modal").style.display = "block";
@@ -827,6 +845,13 @@
         }
 
         function checkoutCart() {
+            // Block guests from purchasing
+            if (activeUser && activeUser.isGuest) {
+                document.getElementById('guest-gate-modal').style.display = 'block';
+                document.getElementById('overlay').style.display = 'block';
+                closeAllPanels();
+                return;
+            }
             if (cart.length === 0) {
                 showToast('Your cart is empty! ⚠️', 'error');
                 return;
@@ -843,6 +868,11 @@
             document.getElementById("name").value = "";
             document.getElementById("address").value = "";
             document.getElementById("cellphone").value = "";
+        }
+
+        function closeGuestGate() {
+            document.getElementById('guest-gate-modal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
         }
 
         function updatePurchasedItems() {
@@ -1050,17 +1080,10 @@
             }, 1000);
         }
 
-        // ASYNC GATEKEEPER — handle Clerk OAuth callback and session sync
+        // ASYNC GATEKEEPER — session sync only (OAuth callbacks handled by login.html)
         window.addEventListener('load', async () => {
             await window.Clerk.load();
-
-            // PREVENT PREMATURE REDIRECT: If the URL has Clerk OAuth processing parameters,
-            // stop the gatekeeper and let Clerk finish its background token exchange.
-            if (window.location.search.includes('__clerk') || window.location.search.includes('state=')) {
-                return; 
-            }
-
-            // Sync Clerk session to local storage
+            
             if (window.Clerk.user) {
                 const user = window.Clerk.user;
                 activeUser = {
@@ -1072,7 +1095,6 @@
                 const welcomeTitle = document.getElementById("welcome-title");
                 if (welcomeTitle) welcomeTitle.innerHTML = `Welcome, ${activeUser.username}!`;
             } else if (!activeUser) {
-                // If no Clerk user, no guest session, and no OAuth processing, kick to login
                 window.location.href = 'login.html';
             }
         });
