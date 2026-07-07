@@ -1054,11 +1054,6 @@
         window.addEventListener('load', async () => {
             await window.Clerk.load();
 
-            // Process OAuth callback if arriving from Google/Facebook
-            if (window.location.search.includes('state=')) {
-                try { await window.Clerk.handleRedirectCallback(); } catch(e) { console.error(e); }
-            }
-
             // Sync Clerk session to local storage
             if (window.Clerk.user) {
                 const user = window.Clerk.user;
