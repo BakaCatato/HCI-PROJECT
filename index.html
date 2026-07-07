@@ -1054,6 +1054,12 @@
         window.addEventListener('load', async () => {
             await window.Clerk.load();
 
+            // PREVENT PREMATURE REDIRECT: If the URL has Clerk OAuth processing parameters,
+            // stop the gatekeeper and let Clerk finish its background token exchange.
+            if (window.location.search.includes('__clerk') || window.location.search.includes('state=')) {
+                return; 
+            }
+
             // Sync Clerk session to local storage
             if (window.Clerk.user) {
                 const user = window.Clerk.user;
@@ -1066,7 +1072,7 @@
                 const welcomeTitle = document.getElementById("welcome-title");
                 if (welcomeTitle) welcomeTitle.innerHTML = `Welcome, ${activeUser.username}!`;
             } else if (!activeUser) {
-                // If no Clerk user and no guest session, kick to login
+                // If no Clerk user, no guest session, and no OAuth processing, kick to login
                 window.location.href = 'login.html';
             }
         });
