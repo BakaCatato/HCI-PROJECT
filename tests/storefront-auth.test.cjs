@@ -12,6 +12,7 @@ const source = html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
 const product = "GnC Cata's Lumanog Acoustic";
 const cachedMember = JSON.stringify({ username: 'Cached Member', isGuest: false });
 const cachedGuest = JSON.stringify({ username: 'Cached Guest', isGuest: true });
+const legacyAckKey = 'gnc_legacy_shopping_notice_v1';
 const ownerKey = id => 'gnc_shopping_v1:' + (id ? 'member:' + encodeURIComponent(id) : 'guest');
 const record = (cart = [], purchasedItems = []) => JSON.stringify({ version: 1, cart, purchasedItems });
 
@@ -59,8 +60,10 @@ function boot({ clerk = mockClerk(), profile, cart = [product], storage = { [own
     function element(tagName = 'div', attrs = '') {
         const classes = new Set();
         const events = new Map();
+        const attributes = new Map([...attrs.matchAll(/([\w-]+)="([^"]*)"/g)].map(match => [match[1], match[2]]));
         const node = {
             tagName, id: '', style: {}, children: [], hidden: /\bhidden\b/.test(attrs),
+            inert: /\binert\b/.test(attrs),
             disabled: /\bdisabled\b/.test(attrs), value: '', _text: '', _html: '',
             classList: {
                 add(...names) { names.forEach(name => classes.add(name)); },
@@ -87,7 +90,10 @@ function boot({ clerk = mockClerk(), profile, cart = [product], storage = { [own
             removeEventListener(name, callback) { events.get(name)?.delete(callback); },
             dispatch(name) { for (const callback of [...(events.get(name) || [])]) callback(); },
             listenerCount(name) { return events.get(name)?.size || 0; },
-            focus() {}
+            setAttribute(name, value) { attributes.set(name, value); },
+            getAttribute(name) { return attributes.get(name) ?? null; },
+            focus() { document.activeElement = this; },
+            scrollIntoView(options) { this.lastScroll = options; }
         };
         node.id = attrs.match(/\bid="([^"]+)"/)?.[1] || '';
         node.className = attrs.match(/\bclass="([^"]+)"/)?.[1] || '';
@@ -107,6 +113,7 @@ function boot({ clerk = mockClerk(), profile, cart = [product], storage = { [own
         createElement: tag => element(tag),
         querySelectorAll: selector => [...elements].filter(node => selector.split(',').some(s => matches(node, s.trim()))),
         querySelector(selector) { return this.querySelectorAll(selector)[0] || null; },
+        dispatch(name, event) { for (const callback of documentEvents.get(name) || []) callback(event); },
         addEventListener(name, callback) { if (!documentEvents.has(name)) documentEvents.set(name, []); documentEvents.get(name).push(callback); }
     };
     const location = { href: 'index.html', replacements: [], reloads: 0,
@@ -307,7 +314,7 @@ test('failed sign-out retains member/cache, reports no success, and supports ret
     assert.equal(app.shopping(), before); assert.equal(app.storage.gnc_user, oldProfile);
     assert.equal(app.run('authState'), 'member'); assert.equal(app.run('checkoutIdentity'), null);
     assert.equal(app.location.href, 'index.html'); assert.doesNotMatch(app.toasts(), /Logged out successfully/);
-    assert.match(app.get('auth-message').textContent, /could not confirm sign-out/);
+    assert.equal(app.get('auth-message').textContent, 'We couldn’t confirm sign-out. Please try again.');
     clerk.signOut = async () => { clerk.member(null); };
     await app.get('auth-retry-btn').onclick();
     assert.equal(app.location.href, 'login.html'); assert.equal(app.storage.gnc_user, undefined);
@@ -465,15 +472,17 @@ test('logout immediately hides saved shopping and restores only arrays on failed
     assertRejected(app, 'addToCart(guitarDatabase[2].name); removeFromCart(0); proceedPurchase()');
     waiting.reject(new Error('offline')); await pending;
     assertItems(app, [product], [secondProduct]); assertDetailsCleared(app);
-    assert.equal(app.storedShopping(), before); assert.match(app.get('auth-message').textContent, /could not confirm sign-out/);
+    assert.equal(app.storedShopping(), before); assert.equal(app.get('auth-message').textContent, 'We couldn’t confirm sign-out. Please try again.');
 });
 
 for (const owner of ['member_a', null]) {
     test('unowned legacy keys are untouched and unused for ' + (owner || 'guest'), async () => {
         const storage = { gnc_cart: JSON.stringify([product]), gnc_purchased: '{malformed legacy', unrelated_setting: 'keep' };
         const app = boot({ clerk: mockClerk(owner), profile: owner ? cachedMember : cachedGuest, storage }); await app.settle();
-        assertItems(app, []); assert.match(app.get('legacy-message').textContent, /no known owner/);
-        assert.equal(app.get('legacy-message').hidden, false);
+        assertItems(app, []);
+        assert.equal(app.get('cart-legacy-notice').hidden, false);
+        assert.equal(app.get('purchases-legacy-notice').hidden, false);
+        assert.equal(app.get('auth-notice').hidden, true, 'legacy information never keeps the account notice visible');
         app.run('addToCart(guitarDatabase[1].name)');
         if (owner) purchase(app);
         assert.equal(storage.gnc_cart, JSON.stringify([product])); assert.equal(storage.gnc_purchased, '{malformed legacy');
@@ -594,4 +603,171 @@ test('coupon state is cleared with owner changes and a failed save preserves pre
     assert.equal(app.run('discount'), 0); assert.equal(app.run('appliedCoupon'), '');
     assert.equal(app.get('coupon-input').value, ''); assert.equal(app.get('coupon-status').innerHTML, '');
     assert.equal(app.get('shopping-message').hidden, true);
+});
+
+// Focused UX regressions; ownership and checkout assertions above remain in place.
+test('legacy dismissal persists across rerenders, panel reopening, identity changes and reloads', async () => {
+    const storage = { gnc_cart: '["old"]', gnc_purchased: '{old}', unrelated: 'keep' };
+    const app = boot({ clerk: mockClerk('member_a'), storage }); await app.settle();
+    assert.equal(app.get('cart-legacy-notice').hidden, false);
+    const before = app.storedShopping(); app.run('dismissLegacyShopping()');
+    assert.equal(storage[legacyAckKey], 'dismissed'); assert.equal(app.storedShopping(), before);
+    app.run('checkLegacyShopping(); renderAuthUI(); updateCart(); updatePurchasedItems(); togglePanel("cart-panel")');
+    app.clerk.member('member_b');
+    for (const id of ['cart-legacy-notice', 'purchases-legacy-notice']) assert.equal(app.get(id).hidden, true);
+    const reload = boot({ profile: cachedGuest, storage }); await reload.settle();
+    assert.equal(reload.get('cart-legacy-notice').hidden, true); assert.equal(reload.get('purchases-legacy-notice').hidden, true);
+    assert.equal(storage.gnc_cart, '["old"]'); assert.equal(storage.gnc_purchased, '{old}'); assert.equal(storage.unrelated, 'keep');
+});
+
+test('legacy dismissal falls back to memory when acknowledgement writes and later reads fail', async () => {
+    const storage = { gnc_cart: '[]' }, faults = { write: legacyAckKey, read: legacyAckKey };
+    const app = boot({ profile: cachedGuest, storage, faults }); await app.settle();
+    assert.equal(app.get('cart-legacy-notice').hidden, false);
+    app.run('dismissLegacyShopping()'); faults.read = true;
+    app.run('checkLegacyShopping(); renderAuthUI(); togglePanel("purchased-panel")');
+    assert.equal(app.get('cart-legacy-notice').hidden, true); assert.equal(app.get('purchases-legacy-notice').hidden, true);
+    assert.equal(storage[legacyAckKey], undefined); assert.equal(storage.gnc_cart, '[]');
+    assert.equal(app.run('authState'), 'guest');
+});
+
+test('unavailable legacy storage does not invent a legacy notice or crash rendering', async () => {
+    const app = boot({ clerk: mockClerk('member_a'), faults: { read: true } }); await app.settle();
+    assert.equal(app.get('cart-legacy-notice').hidden, true);
+    assert.equal(app.get('auth-notice').hidden, false);
+    assert.equal(app.get('cart-state-title').textContent, 'Shopping unavailable');
+    assertRejected(app, 'addToCart(guitarDatabase[0].name); proceedPurchase()');
+});
+
+for (const failure of ['initializing', 'authentication', 'storage read', 'storage write', 'logout']) {
+    test('legacy dismissal cannot hide actionable feedback or change authorization: ' + failure, async () => {
+        const clerk = mockClerk('member_a'), faults = {}, storage = { gnc_cart: '[]', [ownerKey('member_a')]: record([product]) };
+        if (failure === 'initializing') clerk.load = () => new Promise(() => {});
+        if (failure === 'authentication') clerk.load = async () => { throw new Error('offline'); };
+        if (failure === 'storage read') faults.read = ownerKey('member_a');
+        const app = boot({ clerk, storage, faults }); await app.settle();
+        if (failure === 'storage write') { faults.write = ownerKey('member_a'); app.run('addToCart(guitarDatabase[1].name)'); }
+        if (failure === 'logout') { clerk.signOut = async () => { throw new Error('offline'); }; await app.run('logoutUser()'); }
+        const before = { shopping: app.shopping(), state: app.run('authState'), message: app.get('auth-message').textContent, storage: app.get('shopping-message').textContent, blocked: app.get('purchase-submit').disabled, retry: app.get('auth-retry-btn').onclick };
+        app.run('dismissLegacyShopping(); renderAuthUI(); checkLegacyShopping()');
+        assert.equal(app.get('cart-legacy-notice').hidden, true); assert.equal(app.get('auth-notice').hidden, false);
+        assert.equal(app.shopping(), before.shopping); assert.equal(app.run('authState'), before.state);
+        assert.equal(app.get('auth-message').textContent, before.message); assert.equal(app.get('shopping-message').textContent, before.storage);
+        assert.equal(app.get('purchase-submit').disabled, before.blocked); assert.equal(app.get('auth-retry-btn').onclick, before.retry);
+        assertRejected(app, 'proceedPurchase()');
+        if (failure === 'storage read') assert.equal(app.get('storage-retry-btn').hidden, false);
+    });
+}
+
+test('profile menu exposes guest Sign In and member Log Out with no placeholder account actions', async () => {
+    const clerk = mockClerk(), app = boot({ clerk, profile: cachedGuest }); await app.settle();
+    assert.equal(app.get('dropdown-role').textContent, 'Browsing as guest');
+    assert.equal(app.get('profile-sign-in').hidden, false); assert.equal(app.get('profile-sign-in').getAttribute('href'), 'login.html');
+    assert.equal(app.get('profile-logout').hidden, true);
+    assert.doesNotMatch(html, /My Account|Settings – coming soon/);
+    clerk.member('member_a');
+    assert.equal(app.get('profile-sign-in').hidden, true); assert.equal(app.get('profile-logout').hidden, false);
+    assert.equal(app.get('logout-label').textContent, 'Log Out'); assert.equal(app.get('profile-logout').disabled, false);
+});
+
+test('pending logout is concise, disables repeat clicks, and failed logout has a working retry', async () => {
+    const clerk = mockClerk('member_a'), waiting = deferred(), app = boot({ clerk }); await app.settle();
+    let calls = 0; clerk.signOut = () => { calls++; return waiting.promise; };
+    const pending = app.run('logoutUser()'); await app.run('logoutUser()');
+    assert.equal(calls, 1); assert.equal(app.get('profile-logout').disabled, true);
+    assert.equal(app.get('logout-label').textContent, 'Signing out…'); assert.equal(app.get('auth-message').textContent, 'Signing out…');
+    assert.doesNotMatch(app.toasts(), /Logged out successfully/);
+    waiting.reject(new Error('offline')); await pending;
+    assert.equal(app.get('profile-logout').disabled, false); assert.equal(app.get('auth-retry-btn').textContent, 'Retry sign-out');
+    assert.equal(app.get('auth-message').textContent, 'We couldn’t confirm sign-out. Please try again.');
+    assert.equal(app.get('profile-error').hidden, false); assert.equal(app.get('profile-error').textContent, app.get('auth-message').textContent);
+    assert.equal(app.get('profile-retry').hidden, false); assert.equal(app.get('profile-retry').textContent, 'Retry sign-out');
+    app.run('dismissLegacyShopping()'); assert.equal(app.get('profile-error').hidden, false);
+    clerk.signOut = async () => clerk.member(null);
+    await app.get('profile-retry').onclick(); assert.equal(app.location.href, 'login.html');
+    assert.equal(app.get('profile-error').hidden, true); assert.equal(app.get('profile-retry').hidden, true);
+    assert.doesNotMatch(app.get('auth-message').textContent, /couldn’t confirm/);
+});
+
+test('failed logout with lost Clerk verification offers verification retry before another sign-out', async () => {
+    const clerk = mockClerk('member_a'), app = boot({ clerk }); await app.settle();
+    clerk.signOut = async () => { clerk.loaded = false; throw new Error('offline'); };
+    await app.run('logoutUser()');
+    assert.equal(app.run('authState'), 'error'); assert.equal(app.get('auth-retry-btn').textContent, 'Retry verification');
+    assert.equal(app.get('profile-retry').textContent, 'Retry verification');
+    assert.equal(app.get('auth-message').textContent, 'We couldn’t confirm sign-out. Please try again.');
+    assertRejected(app, 'addToCart(guitarDatabase[0].name); proceedPurchase()');
+    app.get('auth-retry-btn').onclick(); await app.settle();
+    assert.equal(app.run('authState'), 'member'); assert.equal(app.get('auth-notice').hidden, true);
+});
+
+test('resolved member empty states become populated and return to empty without altering history', async () => {
+    const app = boot({ clerk: mockClerk('member_a'), cart: [] }); await app.settle();
+    assert.equal(app.get('cart-empty-state').hidden, false); assert.equal(app.get('cart-state-title').textContent, 'Your cart is empty');
+    assert.equal(app.get('order-empty-state').hidden, false); assert.equal(app.get('purchases-state-title').textContent, 'No purchases yet');
+    assert.equal(app.get('purchases-state-action').textContent, 'Browse Guitars');
+    app.run('addToCart(guitarDatabase[0].name)'); assert.equal(app.get('cart-empty-state').hidden, true);
+    purchase(app); assert.equal(app.get('cart-empty-state').hidden, false); assert.equal(app.get('order-empty-state').hidden, true);
+    assert.equal(app.get('order-receipt').style.display, 'block'); assertItems(app, [], [product]);
+});
+
+test('guest purchases explain sign-in and guest cart still supports empty and nonempty states', async () => {
+    const app = boot({ profile: cachedGuest, cart: [] }); await app.settle();
+    assert.equal(app.get('cart-state-title').textContent, 'Your cart is empty');
+    assert.equal(app.get('purchases-state-title').textContent, 'Sign in to view purchases');
+    assert.equal(app.get('purchases-state-action').textContent, 'Sign In');
+    app.run('addToCart(guitarDatabase[0].name)'); assert.equal(app.get('cart-empty-state').hidden, true);
+    assertRejected(app, 'checkoutCart(); proceedPurchase()');
+    app.get('purchases-state-action').onclick(); assert.equal(app.location.href, 'login.html');
+});
+
+test('checking and failed account states show feedback instead of false empty claims, and retry resolves it', async () => {
+    const clerk = mockClerk('member_a'), waiting = deferred(); clerk.load = () => waiting.promise;
+    const app = boot({ clerk, cart: [] });
+    assert.equal(app.get('cart-state-title').textContent, 'Checking your account…');
+    assert.equal(app.get('purchases-state-title').textContent, 'Checking your account…');
+    waiting.reject(new Error('offline')); await app.settle();
+    assert.equal(app.get('cart-state-title').textContent, 'Account unavailable'); assert.equal(app.get('purchases-state-title').textContent, 'Account unavailable');
+    clerk.load = async () => { clerk.loaded = true; };
+    app.get('cart-state-action').onclick(); await app.settle();
+    assert.equal(app.get('auth-notice').hidden, true); assert.equal(app.get('cart-state-title').textContent, 'Your cart is empty');
+    assert.equal(app.get('purchases-state-title').textContent, 'No purchases yet'); assert.equal(clerk.listeners.size, 1);
+});
+
+test('storage read and write errors remain truthful in empty and populated panels and clear after recovery', async () => {
+    const key = ownerKey('member_a'), faults = { read: key }, app = boot({ clerk: mockClerk('member_a'), cart: [], faults }); await app.settle();
+    assert.equal(app.get('cart-state-title').textContent, 'Shopping unavailable');
+    assert.equal(app.get('purchases-state-title').textContent, 'Shopping unavailable');
+    assert.equal(app.get('cart-state-action').textContent, 'Retry storage');
+    delete faults.read; app.get('cart-state-action').onclick();
+    assert.equal(app.get('auth-notice').hidden, true);
+    faults.write = key; app.run('addToCart(guitarDatabase[0].name)');
+    assert.equal(app.get('cart-state-title').textContent, 'Changes weren’t saved'); assert.equal(app.get('cart-state-action').hidden, true);
+    delete faults.write; app.run('addToCart(guitarDatabase[0].name)');
+    assert.equal(app.get('auth-notice').hidden, true); assert.equal(app.get('cart-empty-state').hidden, true);
+    faults.write = key; app.run('removeFromCart(0)');
+    assert.equal(app.get('cart-panel-error').hidden, false); assert.equal(app.get('cart-empty-state').hidden, true); assertItems(app, [product]);
+});
+
+test('browse action closes panels, scrolls and focuses the collection; Escape closes panels/profile', async () => {
+    const app = boot({ profile: cachedGuest, cart: [] }); await app.settle();
+    app.run('togglePanel("cart-panel")'); assert.equal(app.get('cart-panel').inert, false);
+    assert.equal(app.document.activeElement.id, 'cart-panel-close');
+    app.get('cart-state-action').onclick();
+    assert.equal(app.get('cart-panel').inert, true); assert.equal(app.get('overlay').style.display, 'none');
+    assert.equal(app.document.activeElement.id, 'collection-section'); assert.equal(app.get('collection-section').lastScroll.behavior, 'smooth');
+    app.run('togglePanel("purchased-panel")'); app.document.dispatch('keydown', { key: 'Escape' });
+    assert.equal(app.get('purchased-panel').inert, true); assert.equal(app.document.activeElement.id, 'purchases-toggle');
+    app.run('toggleProfileDropdown()'); assert.equal(app.get('profile-toggle').getAttribute('aria-expanded'), 'true');
+    app.document.dispatch('keydown', { key: 'Escape' }); assert.equal(app.get('profile-toggle').getAttribute('aria-expanded'), 'false');
+    assert.equal(app.document.activeElement.id, 'profile-toggle');
+});
+
+test('every product card uses consistent actions while preserving guarded handlers', async () => {
+    const app = boot({ profile: cachedGuest }); await app.settle();
+    const cards = app.get('guitar-grid').innerHTML;
+    assert.equal((cards.match(/>Buy Now<\/button>/g) || []).length, 12);
+    assert.equal((cards.match(/Add to Cart\s*<\/button>/g) || []).length, 12);
+    assert.equal((cards.match(/buyNow\('/g) || []).length, 12); assert.equal((cards.match(/addToCart\('/g) || []).length, 12);
+    assertRejected(app, 'buyNow(guitarDatabase[0].name); proceedPurchase()');
 });

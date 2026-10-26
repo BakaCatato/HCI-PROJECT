@@ -71,9 +71,9 @@
                     </svg>
                 </button>
 
-                <!-- Recently Purchased -->
-                <button class="recently-purchased-btn nav-icon-btn" onclick="togglePanel('purchased-panel')"
-                    title="Recently Purchased">
+                <!-- Purchases -->
+                <button id="purchases-toggle" class="recently-purchased-btn nav-icon-btn" onclick="togglePanel('purchased-panel')"
+                    title="Purchases" aria-label="Purchases" aria-controls="purchased-panel">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22"
                         height="22">
                         <path fill-rule="evenodd"
@@ -83,8 +83,8 @@
                 </button>
 
                 <!-- Shopping Cart -->
-                <button class="shopping-cart-btn nav-icon-btn" onclick="togglePanel('cart-panel')"
-                    title="Shopping Cart">
+                <button id="cart-toggle" class="shopping-cart-btn nav-icon-btn" onclick="togglePanel('cart-panel')"
+                    title="Shopping Cart" aria-label="Shopping Cart" aria-controls="cart-panel">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22"
                         height="22">
                         <path
@@ -95,7 +95,7 @@
 
                 <!-- Profile Dropdown -->
                 <div class="profile-dropdown-wrapper" id="profile-dropdown-wrapper">
-                    <button class="profile-btn nav-icon-btn" onclick="toggleProfileDropdown()" title="Profile">
+                    <button id="profile-toggle" class="profile-btn nav-icon-btn" onclick="toggleProfileDropdown()" title="Profile" aria-label="Profile" aria-expanded="false" aria-controls="profile-dropdown-menu">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22"
                             height="22">
                             <path fill-rule="evenodd"
@@ -105,28 +105,11 @@
                     </button>
                     <div class="profile-dropdown-menu" id="profile-dropdown-menu">
                         <div class="dropdown-user-info">
-                            <div class="username" id="dropdown-username">User</div>
-                            <div class="user-role" id="dropdown-role">Member</div>
+                            <div class="username" id="dropdown-username">GnC</div>
+                            <div class="user-role" id="dropdown-role">Checking account</div>
                         </div>
-                        <button class="dropdown-item" onclick="showToast('My Account – coming soon!', 'success')">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="18"
-                                height="18">
-                                <path
-                                    d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 0 0-13.074.003Z" />
-                            </svg>
-                            My Account
-                        </button>
-                        <button class="dropdown-item" onclick="showToast('Settings – coming soon!', 'success')">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="18"
-                                height="18">
-                                <path fill-rule="evenodd"
-                                    d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.331 1.652a6.993 6.993 0 0 1 1.929 1.115l1.598-.54a1 1 0 0 1 1.186.447l1.18 2.044a1 1 0 0 1-.205 1.251l-1.267 1.113a7.047 7.047 0 0 1 0 2.228l1.267 1.113a1 1 0 0 1 .206 1.25l-1.18 2.045a1 1 0 0 1-1.187.447l-1.598-.54a6.993 6.993 0 0 1-1.929 1.115l-.33 1.652a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.331-1.652a6.993 6.993 0 0 1-1.929-1.115l-1.598.54a1 1 0 0 1-1.186-.447l-1.18-2.044a1 1 0 0 1 .205-1.251l1.267-1.114a7.05 7.05 0 0 1 0-2.227L1.821 7.773a1 1 0 0 1-.206-1.25l1.18-2.045a1 1 0 0 1 1.187-.447l1.598.54A6.992 6.992 0 0 1 7.51 3.456l.33-1.652ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            Settings
-                        </button>
-                        <div class="dropdown-divider"></div>
-                        <button class="dropdown-item logout-item" onclick="logoutUser()">
+                        <a id="profile-sign-in" class="dropdown-item" href="login.html" hidden>Sign In</a>
+                        <button id="profile-logout" class="dropdown-item logout-item" onclick="logoutUser()" hidden>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="18"
                                 height="18">
                                 <path fill-rule="evenodd"
@@ -136,23 +119,15 @@
                                     d="M19 10a.75.75 0 0 0-.75-.75H8.704l1.048-.943a.75.75 0 1 0-1.004-1.114l-2.5 2.25a.75.75 0 0 0 0 1.114l2.5 2.25a.75.75 0 1 0 1.004-1.114l-1.048-.943h9.546A.75.75 0 0 0 19 10Z"
                                     clip-rule="evenodd" />
                             </svg>
-                            Log Out
+                            <span id="logout-label">Log Out</span>
                         </button>
+                        <p id="profile-error" class="profile-error" role="status" aria-live="polite" hidden></p>
+                        <button id="profile-retry" class="dropdown-item" type="button" hidden>Retry sign-out</button>
                     </div>
                 </div>
             </div>
         </div>
     </header>
-
-    <aside id="auth-notice" class="auth-notice" aria-label="Account status">
-        <div class="notice-messages">
-            <p id="auth-message" role="status" aria-live="polite">Checking your GnC account. Browse and search while cart changes are paused.</p>
-            <p id="shopping-message" role="status" aria-live="polite" hidden></p>
-            <p id="legacy-message" hidden></p>
-        </div>
-        <button type="button" id="auth-retry-btn" hidden>Retry</button>
-        <button type="button" id="storage-retry-btn" onclick="retryShoppingStorage()" hidden>Retry storage</button>
-    </aside>
 
     <!--  HERO SECTION  -->
     <section class="hero">
@@ -172,8 +147,17 @@
         </div>
     </section>
 
+    <aside id="auth-notice" class="auth-notice" aria-label="Account status">
+        <div class="notice-messages">
+            <p id="auth-message" role="status" aria-live="polite">Checking your account… You can still browse guitars.</p>
+            <p id="shopping-message" role="status" aria-live="polite" hidden></p>
+        </div>
+        <button type="button" id="auth-retry-btn" hidden>Retry</button>
+        <button type="button" id="storage-retry-btn" onclick="retryShoppingStorage()" hidden>Retry storage</button>
+    </aside>
+
     <!--  FILTER PILLS  -->
-    <section class="search-filter-container" id="collection-section">
+    <section class="search-filter-container" id="collection-section" tabindex="-1" aria-label="Guitar collection">
         <h2 class="section-title">Our Collection</h2>
         <div class="filter-buttons">
             <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
@@ -239,10 +223,21 @@
     </footer>
 
     <!--  SIDE PANELS  -->
-    <div id="cart-panel" class="side-panel">
+    <div id="cart-panel" class="side-panel" inert>
         <div class="panel-header">
             <h3>Shopping Cart</h3>
-            <button class="close-btn" onclick="togglePanel('cart-panel')">&times;</button>
+            <button id="cart-panel-close" class="close-btn" onclick="togglePanel('cart-panel')" aria-label="Close shopping cart">&times;</button>
+        </div>
+        <div id="cart-legacy-notice" class="legacy-notice" hidden>
+            <p>Items from an earlier version aren’t shown.</p>
+            <button type="button" onclick="dismissLegacyShopping(this)" aria-label="Dismiss earlier-version items notice">Dismiss</button>
+        </div>
+        <p id="cart-panel-error" class="panel-error" role="status" hidden></p>
+        <div id="cart-empty-state" class="shopping-empty-state">
+            <svg aria-hidden="true" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <h4 id="cart-state-title">Checking your account…</h4>
+            <p id="cart-state-description">You can browse while we get your shopping items ready.</p>
+            <button id="cart-state-action" class="panel-action" type="button" onclick="browseGuitars()">Browse Guitars</button>
         </div>
         <ul id="cart-items" class="item-list"></ul>
         <!-- Coupon / Promo Code Section -->
@@ -259,17 +254,22 @@
         </div>
     </div>
 
-    <div id="purchased-panel" class="side-panel">
+    <div id="purchased-panel" class="side-panel" inert>
         <div class="panel-header">
-            <h3>Order Tracking</h3>
-            <button class="close-btn" onclick="togglePanel('purchased-panel')">&times;</button>
+            <h3>Purchases</h3>
+            <button id="purchased-panel-close" class="close-btn" onclick="togglePanel('purchased-panel')" aria-label="Close purchases">&times;</button>
         </div>
-
+        <div id="purchases-legacy-notice" class="legacy-notice" hidden>
+            <p>Items from an earlier version aren’t shown.</p>
+            <button type="button" onclick="dismissLegacyShopping(this)" aria-label="Dismiss earlier-version items notice">Dismiss</button>
+        </div>
+        <p id="purchases-panel-error" class="panel-error" role="status" hidden></p>
         <!-- Empty State -->
-        <div id="order-empty-state" class="order-empty-state">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            <p>No orders yet</p>
-            <span>Your purchases will appear here</span>
+        <div id="order-empty-state" class="shopping-empty-state">
+            <svg aria-hidden="true" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            <h4 id="purchases-state-title">Checking your account…</h4>
+            <p id="purchases-state-description">You can browse while we get your shopping items ready.</p>
+            <button id="purchases-state-action" class="panel-action" type="button" onclick="browseGuitars()">Browse Guitars</button>
         </div>
 
         <!-- Digital Receipt (hidden by default) -->
@@ -419,7 +419,9 @@
         let shoppingOwner = null;
         let shoppingReady = false;
         let shoppingError = '';
-        let legacyNotice = '';
+        const LEGACY_NOTICE_ACK_KEY = 'gnc_legacy_shopping_notice_v1';
+        let legacyDetected = false;
+        let legacyDismissed = false; // Also remembers dismissal when browser storage is unavailable.
         let shoppingGeneration = 0;
         const shoppingTimers = new Set();
         let cart = [];
@@ -533,10 +535,10 @@
                         <div class="image-wrapper">
                             <img src="${guitar.image}" alt="${guitar.name}" loading="lazy">
                             <div class="buttons">
-                                <button class="btn-buy-now" onclick="event.stopPropagation(); buyNow('${safeName}')">${guitar.buyText}</button>
+                                <button class="btn-buy-now" onclick="event.stopPropagation(); buyNow('${safeName}')">Buy Now</button>
                                 <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart('${safeName}')">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                                    ${guitar.cartText}
+                                    Add to Cart
                                 </button>
                             </div>
                         </div>
@@ -653,8 +655,7 @@
             const isClickOnProfileDropdown = event.target.closest('.profile-dropdown-wrapper');
 
             if (!isClickOnProfileDropdown) {
-                const menu = document.getElementById('profile-dropdown-menu');
-                if (menu) menu.classList.remove('open');
+                closeProfileDropdown();
             }
 
             if (!isClickInsideCard && !isClickInsideBuyModal && !isClickInsideConfModal && !isClickInsideGuestModal && !isClickInsidePanel && !isClickOnCartBtn && !isClickOnShopBtn && !isClickInsideSearch && !isClickOnThemeBtn && !isClickOnProfileDropdown) {
@@ -696,19 +697,70 @@
 
             if (!isOpen) {
                 panel.classList.add('open');
+                panel.inert = false;
                 overlay.style.display = 'block';
                 if (panelId === 'purchased-panel') {
                     updatePurchasedItems();
                 }
+                document.getElementById(panelId + '-close').focus();
             } else {
                 overlay.style.display = 'none';
+                document.getElementById(panelId === 'cart-panel' ? 'cart-toggle' : 'purchases-toggle').focus();
             }
         }
 
         function closeAllPanels() {
             document.querySelectorAll('.side-panel').forEach(panel => {
                 panel.classList.remove('open');
+                panel.inert = true;
             });
+        }
+
+        function browseGuitars() {
+            closeAllPanels();
+            document.getElementById('overlay').style.display = 'none';
+            const collection = document.getElementById('collection-section');
+            collection.scrollIntoView({ behavior: 'smooth' });
+            collection.focus({ preventScroll: true });
+        }
+
+        function signIn() {
+            window.location.href = 'login.html';
+        }
+
+        // State-only rendering keeps empty/loading feedback separate from saved shopping arrays.
+        function renderShoppingStates() {
+            const ready = shoppingReady && !!shoppingOwner && !signingOut;
+            let feedback = null;
+            if (signingOut) feedback = ['Signing out…', 'Your saved items will be here when you return.'];
+            else if (authState === 'initializing') feedback = ['Checking your account…', 'You can browse while we get your shopping items ready.', 'Browse Guitars', browseGuitars];
+            else if (authState === 'error') feedback = ['Account unavailable', 'We couldn’t verify your account. Please retry.', 'Retry verification', retryAuthentication];
+            else if (authState === 'unauthenticated') feedback = ['Sign in to continue', 'Sign in or choose guest access to use your cart.', 'Sign In', signIn];
+            else if (!shoppingOwner) feedback = ['Checking shopping access…', 'Please retry account verification.', 'Retry verification', retryAuthentication];
+            else if (!shoppingReady) feedback = ['Shopping unavailable', 'We couldn’t load your saved items. Your saved data is untouched.', 'Retry storage', retryShoppingStorage];
+            else if (shoppingError) feedback = ['Changes weren’t saved', 'Your previous items are unchanged. Please retry your last action.'];
+
+            const cartVisible = ready && cart.length > 0;
+            const purchasesVisible = ready && authState === 'member' && purchasedItems.length > 0;
+            const cartState = feedback || ['Your cart is empty', 'Find a guitar you love and add it to your cart.', 'Browse Guitars', browseGuitars];
+            const purchasesState = feedback || (authState === 'guest'
+                ? ['Sign in to view purchases', 'An account is required to make simulated purchases. Your guest cart stays separate.', 'Sign In', signIn]
+                : ['No purchases yet', 'Your simulated purchases will appear here.', 'Browse Guitars', browseGuitars]);
+
+            [['cart', 'cart-empty-state', cartVisible, cartState], ['purchases', 'order-empty-state', purchasesVisible, purchasesState]].forEach(([prefix, id, hasItems, state]) => {
+                document.getElementById(id).hidden = hasItems;
+                document.getElementById(prefix + '-state-title').textContent = state[0];
+                document.getElementById(prefix + '-state-description').textContent = state[1];
+                const action = document.getElementById(prefix + '-state-action');
+                action.hidden = !state[2];
+                action.textContent = state[2] || '';
+                action.onclick = state[3] || null;
+                const error = document.getElementById(prefix + '-panel-error');
+                error.hidden = !hasItems || !shoppingError;
+                error.textContent = shoppingError;
+            });
+            document.getElementById('cart-items').hidden = !cartVisible;
+            document.getElementById('order-receipt').style.display = purchasesVisible ? 'block' : 'none';
         }
 
         // SHOPPING OWNERSHIP — selected only after Clerk settles, never from a cached member profile.
@@ -782,11 +834,25 @@
 
         function checkLegacyShopping() {
             try {
-                legacyNotice = localStorage.getItem('gnc_cart') !== null || localStorage.getItem('gnc_purchased') !== null
-                    ? 'Older shopping data has no known owner. It remains untouched in this browser and is not shown or assigned to any account or guest.' : '';
-            } catch (error) {
-                legacyNotice = 'Browser storage could not be checked for older shopping data. No older data has been imported.';
-            }
+                legacyDismissed = legacyDismissed || localStorage.getItem(LEGACY_NOTICE_ACK_KEY) === 'dismissed';
+            } catch (error) { /* Keep the in-memory acknowledgement. */ }
+            try {
+                legacyDetected = localStorage.getItem('gnc_cart') !== null || localStorage.getItem('gnc_purchased') !== null;
+            } catch (error) { /* Do not infer legacy items from an unavailable store. */ }
+            renderLegacyNotice();
+        }
+
+        function renderLegacyNotice() {
+            document.querySelectorAll('.legacy-notice').forEach(notice => {
+                notice.hidden = !legacyDetected || legacyDismissed;
+            });
+        }
+
+        function dismissLegacyShopping(button) {
+            legacyDismissed = true;
+            try { localStorage.setItem(LEGACY_NOTICE_ACK_KEY, 'dismissed'); } catch (error) { /* Dismiss for this page session. */ }
+            renderLegacyNotice();
+            button?.closest('.side-panel')?.querySelector('.close-btn')?.focus();
         }
 
         function retryShoppingStorage() {
@@ -937,6 +1003,7 @@
                 cartPanel.appendChild(footer);
             }
             updatePurchaseControls();
+            renderShoppingStates();
         }
 
         function removeFromCart(index) {
@@ -1039,19 +1106,13 @@
 
         function updatePurchasedItems() {
             const purchasedList = document.getElementById("purchased-items");
-            const emptyState = document.getElementById("order-empty-state");
-            const receipt = document.getElementById("order-receipt");
 
             purchasedList.innerHTML = "";
 
             if (purchasedItems.length === 0) {
-                emptyState.style.display = 'flex';
-                receipt.style.display = 'none';
+                renderShoppingStates();
                 return;
             }
-
-            emptyState.style.display = 'none';
-            receipt.style.display = 'block';
 
             let receiptTotal = 0;
             purchasedItems.forEach(item => {
@@ -1075,6 +1136,7 @@
             });
 
             document.getElementById("receipt-total").textContent = '₱' + receiptTotal.toLocaleString('en-US');
+            renderShoppingStates();
         }
 
         let trackingInterval = null;
@@ -1230,7 +1292,24 @@
         function toggleProfileDropdown() {
             const menu = document.getElementById('profile-dropdown-menu');
             menu.classList.toggle('open');
+            document.getElementById('profile-toggle').setAttribute('aria-expanded', String(menu.classList.contains('open')));
         }
+
+        function closeProfileDropdown() {
+            document.getElementById('profile-dropdown-menu').classList.remove('open');
+            document.getElementById('profile-toggle').setAttribute('aria-expanded', 'false');
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape') return;
+            if (document.getElementById('profile-dropdown-menu').classList.contains('open')) {
+                closeProfileDropdown();
+                document.getElementById('profile-toggle').focus();
+            } else {
+                const panel = document.querySelector('.side-panel.open');
+                if (panel) togglePanel(panel.id);
+            }
+        });
 
         // STOREFRONT AUTH — client-side guards for the simulated checkout, not server authorization.
         function cacheDisplayProfile(profile) {
@@ -1283,34 +1362,47 @@
                 ? `Welcome, ${activeUser.username}!` : 'Welcome to GnC — Gitara ni Cata';
             document.getElementById('dropdown-username').textContent = activeUser?.username || 'GnC';
             document.getElementById('dropdown-role').textContent = {
-                initializing: 'Checking account', member: 'Member', guest: 'Guest',
+                initializing: 'Checking account', member: 'Member', guest: 'Browsing as guest',
                 unauthenticated: 'Signed out', error: 'Account unavailable'
             }[authState];
+            document.getElementById('profile-sign-in').hidden = signingOut || !['guest', 'unauthenticated'].includes(authState);
+            const logout = document.getElementById('profile-logout');
+            logout.hidden = authState !== 'member' && !signingOut;
+            logout.disabled = signingOut;
+            document.getElementById('logout-label').textContent = signingOut ? 'Signing out…' : 'Log Out';
 
             let message = '';
             let retry = null;
-            if (signingOut) message = 'Signing out of your GnC account… Shopping details are hidden and cart changes are paused.';
-            else if (signOutError) { message = signOutError; retry = logoutUser; }
-            else if (authState === 'initializing') message = 'Checking your GnC account. Browse and search while cart changes are paused.';
+            if (signingOut) message = 'Signing out…';
+            else if (signOutError) { message = signOutError; retry = authState === 'error' ? retryAuthentication : logoutUser; }
+            else if (authState === 'initializing') message = 'Checking your account… You can still browse guitars.';
             else if (authState === 'error') { message = authFailure; retry = retryAuthentication; }
             else if (authState === 'unauthenticated') message = 'You are signed out. Shopping details are hidden and cart changes are paused. Returning to login for sign-in or guest access.';
             else if (!shoppingOwner) { message = 'Shopping is paused until your account or guest access is confirmed. You can browse and search. Please retry verification.'; retry = retryAuthentication; }
-            document.getElementById('auth-notice').hidden = !message && !shoppingError && !legacyNotice;
+            document.getElementById('auth-notice').hidden = !message && !shoppingError;
             document.getElementById('auth-message').textContent = message;
             document.getElementById('auth-message').hidden = !message;
             document.getElementById('shopping-message').textContent = shoppingError;
             document.getElementById('shopping-message').hidden = !shoppingError;
-            document.getElementById('legacy-message').textContent = legacyNotice;
-            document.getElementById('legacy-message').hidden = !legacyNotice;
             document.getElementById('storage-retry-btn').hidden = !shoppingOwner || shoppingReady;
             const retryButton = document.getElementById('auth-retry-btn');
             retryButton.hidden = !retry;
             retryButton.onclick = retry;
+            retryButton.textContent = retry === logoutUser ? 'Retry sign-out' : 'Retry verification';
+            document.getElementById('profile-error').hidden = !signOutError;
+            document.getElementById('profile-error').textContent = signOutError;
+            const profileRetry = document.getElementById('profile-retry');
+            profileRetry.hidden = !signOutError || signingOut;
+            profileRetry.onclick = signOutError ? retry : null;
+            profileRetry.textContent = retryButton.textContent;
             updatePurchaseControls();
+            renderLegacyNotice();
+            renderShoppingStates();
         }
 
         function setAuthState(state, identity = null, profile = null) {
             const changed = authState !== state || (authIdentity && !sameIdentity(authIdentity, identity));
+            if (changed && !signingOut) signOutError = '';
             const wasCheckingOut = !!checkoutIdentity;
             authState = state;
             authIdentity = identity;
@@ -1467,11 +1559,7 @@
                 window.location.replace('login.html');
             } catch (error) {
                 syncAuthentication({ redirect: false });
-                if (authState === 'error') {
-                    authFailure = 'GnC could not confirm sign-out. Retry account verification, then try Log Out again.';
-                } else {
-                    signOutError = 'GnC could not confirm sign-out. Your account may still be signed in. Please retry.';
-                }
+                signOutError = 'We couldn’t confirm sign-out. Please try again.';
             } finally {
                 signingOut = false;
                 // A failed sign-out may restore only the currently verified owner's saved arrays.

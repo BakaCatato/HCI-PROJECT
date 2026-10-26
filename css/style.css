@@ -25,11 +25,8 @@ body {
 
 /* Account/storage feedback; browsing remains available while cart changes are paused. */
 .auth-notice {
-    position: fixed;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(640px, calc(100% - 28px));
+    width: min(860px, calc(100% - 28px));
+    margin: 20px auto 0;
     padding: 14px 18px;
     border: 1px solid #d4a88c;
     border-radius: 12px;
@@ -40,7 +37,6 @@ body {
     flex-wrap: wrap;
     align-items: center;
     gap: 12px;
-    z-index: 1000;
     font-size: 13px;
 }
 
@@ -48,6 +44,7 @@ body {
 .auth-notice .notice-messages { flex: 1 1 260px; }
 .auth-notice p + p:not([hidden]) { margin-top: 6px; }
 .auth-notice button {
+    min-height: 44px;
     padding: 8px 14px;
     border: none;
     border-radius: 8px;
@@ -62,6 +59,18 @@ body {
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+/* Hidden controls stay out of both the visual layout and keyboard navigation. */
+[hidden] { display: none !important; }
+
+:is(button, a, input, #collection-section):focus-visible {
+    outline: 3px solid #f1c8a8;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 5px #493023;
+}
+
+#collection-section { scroll-margin-top: 135px; }
+.dropdown-item:focus-visible { outline-offset: -4px; box-shadow: none; }
 
 /* =============================================
    1. STICKY NAVBAR
@@ -271,13 +280,15 @@ body {
 
 .dropdown-user-info .user-role {
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.5);
+    color: #f3e6da;
     margin-top: 2px;
     letter-spacing: 0.5px;
     text-transform: uppercase;
 }
 
 .dropdown-item {
+    min-height: 44px;
+    text-decoration: none;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -293,6 +304,9 @@ body {
     transition: background 0.2s ease, color 0.2s ease;
     text-align: left;
 }
+
+.dropdown-item:disabled { opacity: 0.65; cursor: wait; }
+.profile-error { padding: 12px 18px 0; color: #fff3e8; font-size: 13px; line-height: 1.6; }
 
 .dropdown-item:hover {
     background: rgba(255, 255, 255, 0.1);
@@ -662,10 +676,17 @@ input[type="radio"] {
     box-sizing: border-box;
 }
 
-.image-wrapper:hover .buttons {
+.image-wrapper:hover .buttons,
+.image-wrapper:focus-within .buttons {
     opacity: 1;
     pointer-events: auto;
 }
+
+@media (hover: none), (pointer: coarse) {
+    .buttons { opacity: 1; pointer-events: auto; }
+}
+
+.btn-buy-now, .btn-add-cart { min-height: 44px; }
 
 /* Primary action — Buy Now (solid, warm gradient) */
 .btn-buy-now {
@@ -827,6 +848,7 @@ input[type="radio"] {
     width: 380px;
     max-width: 92%;
     height: 100vh;
+    height: 100dvh;
     background: rgba(109, 72, 55, 0.92);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -836,12 +858,14 @@ input[type="radio"] {
     z-index: 1005;
     transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     overflow-y: auto;
+    visibility: hidden;
     box-sizing: border-box;
     text-align: left;
 }
 
 .side-panel.open {
     right: 0;
+    visibility: visible;
 }
 
 .panel-header {
@@ -860,6 +884,8 @@ input[type="radio"] {
 }
 
 .close-btn {
+    min-width: 44px;
+    min-height: 44px;
     background: transparent;
     border: none;
     color: white;
@@ -1186,29 +1212,85 @@ input[type="radio"] {
    ORDER TRACKING & RECEIPT PANEL
    ============================================= */
 
-/* Empty State */
-.order-empty-state {
+/* Compact panel information and readable empty/loading states in both themes. */
+.legacy-notice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding: 10px 12px;
+    border: 1px solid #be9b83;
+    border-radius: 10px;
+    background: #f0e1d2;
+    color: #493023;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.legacy-notice p { flex: 1; }
+.legacy-notice button {
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    text-decoration: underline;
+    font: inherit;
+    cursor: pointer;
+}
+
+.panel-error {
+    margin: 16px 0;
+    padding: 14px;
+    border: 1px solid #f1c8a8;
+    border-radius: 10px;
+    color: #fff6ed;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.shopping-empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 60px 20px;
+    gap: 14px;
+    padding: 36px 12px;
     text-align: center;
-    color: rgba(255, 255, 255, 0.4);
+    color: #f7e9dc;
 }
 
-.order-empty-state p {
-    font-size: 16px;
+.shopping-empty-state h4 {
+    font-size: 19px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
+    color: #fff8f0;
     margin: 0;
 }
 
-.order-empty-state span {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.3);
+.shopping-empty-state p {
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 32ch;
 }
+
+.panel-action {
+    min-height: 44px;
+    margin-top: 6px;
+    padding: 12px 20px;
+    border: 1px solid #d4a88c;
+    border-radius: 10px;
+    background: #e6c4ab;
+    color: #352319;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.panel-action:hover { background: #f3d8c2; }
+body.dark-mode .legacy-notice { background: #39281e; color: #f7e9dc; border-color: #95745d; }
 
 /* Digital Receipt */
 .order-receipt {
