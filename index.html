@@ -14,6 +14,7 @@
 
     <!-- CLERK — needed for proper session sign-out -->
     <script
+      id="clerk-script"
       defer
       crossorigin="anonymous"
       data-clerk-publishable-key="pk_test_bmF0aW9uYWwtcGVnYXN1cy02MC5jbGVyay5hY2NvdW50cy5kZXYk"
@@ -142,6 +143,16 @@
             </div>
         </div>
     </header>
+
+    <aside id="auth-notice" class="auth-notice" aria-label="Account status">
+        <div class="notice-messages">
+            <p id="auth-message" role="status" aria-live="polite">Checking your GnC account. Browse and search while cart changes are paused.</p>
+            <p id="shopping-message" role="status" aria-live="polite" hidden></p>
+            <p id="legacy-message" hidden></p>
+        </div>
+        <button type="button" id="auth-retry-btn" hidden>Retry</button>
+        <button type="button" id="storage-retry-btn" onclick="retryShoppingStorage()" hidden>Retry storage</button>
+    </aside>
 
     <!--  HERO SECTION  -->
     <section class="hero">
@@ -299,8 +310,8 @@
             </div>
 
             <!-- Status Tracker -->
-            <div class="receipt-section">
-                <div class="receipt-section-title">Live Tracking</div>
+            <div class="receipt-section" id="tracking-section" hidden>
+                <div class="receipt-section-title">Demo Tracking (Simulated)</div>
                 <div class="order-tracker" id="order-tracker">
                     <div class="tracker-step active" data-step="0">
                         <div class="tracker-dot">
@@ -355,14 +366,14 @@
         <input type="text" id="address" placeholder="Enter delivery address">
         <label for="cellphone">Cellphone Number</label>
         <input type="tel" id="cellphone" placeholder="e.g. 09123456789" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-        <button onclick="proceedPurchase()">Proceed to Buy</button>
+        <button id="purchase-submit" onclick="proceedPurchase()" disabled>Proceed to Buy</button>
     </div>
 
     <div id="confirmation-modal">
         <h3>🎉 Salamat Po! 🎉</h3>
-        <p>Your purchase of <strong><span id="confirmed-guitar"></span></strong> has been confirmed.</p>
-        <p>We will deliver it to <strong><span id="confirmed-address"></span></strong>.</p>
-        <p>We will contact you at <strong><span id="confirmed-cellphone"></span></strong>.</p>
+        <p>Your simulated purchase of <strong><span id="confirmed-guitar"></span></strong> has been saved in this browser. No payment or delivery will take place.</p>
+        <p>Demo delivery address: <strong><span id="confirmed-address"></span></strong>.</p>
+        <p>Demo contact number: <strong><span id="confirmed-cellphone"></span></strong>.</p>
         <button onclick="closeConfirmation()">Awesome!</button>
     </div>
 
@@ -380,11 +391,39 @@
     <div id="toast-container"></div>
 
     <script> 
-        // GATEKEEPER — defer auth check until Clerk loads (see bottom of script)
-        let activeUser = JSON.parse(localStorage.getItem('gnc_user'));
+        // Cached profiles never authenticate a member. Only an explicit guest preference is retained.
+        function readGuestPreference() {
+            try {
+                return JSON.parse(localStorage.getItem('gnc_user'))?.isGuest === true;
+            } catch (error) {
+                return false;
+            }
+        }
 
-        let cart = JSON.parse(localStorage.getItem('gnc_cart')) || [];
-        let purchasedItems = JSON.parse(localStorage.getItem('gnc_purchased')) || [];
+        const AUTH_TIMEOUT_MS = 12000;
+        let guestPreference = readGuestPreference();
+        let activeUser = null;
+        let authState = 'initializing'; // initializing | member | guest | unauthenticated | error
+        let authIdentity = null;
+        let checkoutIdentity = null;
+        let clerkClient = null;
+        let stopAuthListener = null;
+        let initializationAttempt = 0;
+        let initializationInProgress = false;
+        let authFailure = '';
+        let signingOut = false;
+        let signOutError = '';
+
+        // One atomic record per owner; unowned legacy keys are never imported or modified.
+        const SHOPPING_PREFIX = 'gnc_shopping_v1:';
+        let shoppingOwner = null;
+        let shoppingReady = false;
+        let shoppingError = '';
+        let legacyNotice = '';
+        let shoppingGeneration = 0;
+        const shoppingTimers = new Set();
+        let cart = [];
+        let purchasedItems = [];
         let discount = 0;
         let appliedCoupon = '';
 
@@ -409,15 +448,14 @@
 
 
         // THEME
-        const currentTheme = localStorage.getItem('gnc_theme');
+        let currentTheme;
+        try { currentTheme = localStorage.getItem('gnc_theme'); } catch (error) { /* Browsing still works without storage. */ }
         if (currentTheme === 'dark') {
             document.body.classList.add('dark-mode');
-            document.addEventListener('DOMContentLoaded', () => {
-                const moon = document.querySelector('.icon-moon');
-                const sun = document.querySelector('.icon-sun');
-                if (moon) moon.style.display = 'none';
-                if (sun) sun.style.display = 'block';
-            });
+            const moon = document.querySelector('.icon-moon');
+            const sun = document.querySelector('.icon-sun');
+            if (moon) moon.style.display = 'none';
+            if (sun) sun.style.display = 'block';
         }
 
         function toggleTheme() {
@@ -428,13 +466,16 @@
             const sun = document.querySelector('.icon-sun');
 
             if (body.classList.contains('dark-mode')) {
-                localStorage.setItem('gnc_theme', 'dark');
                 if (moon) moon.style.display = 'none';
                 if (sun) sun.style.display = 'block';
             } else {
-                localStorage.setItem('gnc_theme', 'light');
                 if (moon) moon.style.display = 'block';
                 if (sun) sun.style.display = 'none';
+            }
+            try {
+                localStorage.setItem('gnc_theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
+            } catch (error) {
+                showToast('Your theme changed, but this browser could not save the preference.', 'error');
             }
         }
 
@@ -452,14 +493,10 @@
             }
         }
 
-        // DOM READY
-        document.addEventListener("DOMContentLoaded", () => {
+        // The markup is already parsed here; a stalled deferred Clerk script must not block browsing.
+        function initializeStorefront() {
+            checkLegacyShopping();
             const greeting = getGreeting();
-            const welcomeTitle = document.getElementById("welcome-title");
-
-            if (activeUser && welcomeTitle) {
-                welcomeTitle.innerHTML = `Welcome, ${activeUser.username}!`;
-            }
 
             const heroSub = document.getElementById('hero-subtitle');
             if (heroSub) {
@@ -480,7 +517,7 @@
                     }
                 });
             }
-        });
+        }
 
         // RENDER GUITAR CARDS (Premium Template)
         function renderGuitars() {
@@ -523,6 +560,7 @@
             </div>`;
 
             grid.innerHTML = cardsHTML;
+            updatePurchaseControls();
         }
 
         // FILTER LOGIC
@@ -571,18 +609,30 @@
         }
 
         // TOAST
+        function scheduleShoppingCallback(callback, delay) {
+            const generation = shoppingGeneration;
+            const timer = setTimeout(() => {
+                shoppingTimers.delete(timer);
+                if (generation === shoppingGeneration) callback();
+            }, delay);
+            shoppingTimers.add(timer);
+            return timer;
+        }
+
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
 
             toast.className = `toast ${type}`;
-            toast.innerHTML = `<span>${message}</span>`;
+            const text = document.createElement('span');
+            text.textContent = message;
+            toast.appendChild(text);
 
             container.appendChild(toast);
 
-            setTimeout(() => {
+            scheduleShoppingCallback(() => {
                 toast.classList.add('hide');
-                setTimeout(() => {
+                scheduleShoppingCallback(() => {
                     toast.remove();
                 }, 400);
             }, 3000);
@@ -619,7 +669,7 @@
 
             if (event.target.id === 'overlay') {
                 closeAllPanels();
-                document.getElementById('buy-now-modal').style.display = 'none';
+                invalidateCheckout();
                 document.getElementById('confirmation-modal').style.display = 'none';
                 document.getElementById('guest-gate-modal').style.display = 'none';
                 document.getElementById('overlay').style.display = 'none';
@@ -661,10 +711,126 @@
             });
         }
 
+        // SHOPPING OWNERSHIP — selected only after Clerk settles, never from a cached member profile.
+        function currentShoppingOwner() {
+            if (signingOut) return null;
+            if (authState === 'member' && sameIdentity(authIdentity, currentMemberIdentity())) {
+                return SHOPPING_PREFIX + 'member:' + encodeURIComponent(authIdentity.userId);
+            }
+            if (authState === 'guest' && clerkClient?.loaded && window.Clerk === clerkClient &&
+                !clerkClient.user && !clerkClient.session) return SHOPPING_PREFIX + 'guest';
+            return null;
+        }
+
+        function validProduct(name) {
+            return typeof name === 'string' && guitarDatabase.some(guitar => guitar.name === name);
+        }
+
+        function validItems(items) {
+            return Array.isArray(items) && items.every(validProduct);
+        }
+
+        function clearShoppingView() {
+            // Clear sensitive/transient UI before loading another owner, even if that read fails.
+            shoppingGeneration++;
+            stopOrderTracking();
+            shoppingTimers.forEach(timer => clearTimeout(timer));
+            shoppingTimers.clear();
+            document.getElementById('toast-container').innerHTML = '';
+            closeAllPanels();
+            closeConfirmation();
+            closeGuestGate();
+            invalidateCheckout();
+            cart = [];
+            purchasedItems = [];
+            discount = 0;
+            appliedCoupon = '';
+            document.getElementById('coupon-input').classList.remove('shake');
+            ['receipt-order-id', 'receipt-name', 'receipt-phone', 'receipt-address'].forEach(id => {
+                document.getElementById(id).textContent = '—';
+            });
+            ['confirmed-guitar', 'confirmed-address', 'confirmed-cellphone'].forEach(id => {
+                document.getElementById(id).textContent = '';
+            });
+            document.getElementById('receipt-total').textContent = '₱0';
+            document.getElementById('tracking-section').hidden = true;
+            resetTrackingUI();
+            updateCart();
+            updatePurchasedItems();
+        }
+
+        function loadShoppingOwner() {
+            shoppingReady = false;
+            shoppingError = '';
+            if (!shoppingOwner) return;
+            try {
+                const raw = localStorage.getItem(shoppingOwner);
+                const data = raw === null ? { version: 1, cart: [], purchasedItems: [] } : JSON.parse(raw);
+                if (!data || data.version !== 1 || !validItems(data.cart) || !validItems(data.purchasedItems)) {
+                    throw new Error('Invalid shopping data');
+                }
+                cart = data.cart;
+                purchasedItems = data.purchasedItems;
+                shoppingReady = true;
+            } catch (error) {
+                // Preserve unreadable data; do not overwrite it with an empty cart.
+                shoppingError = 'GnC could not read this owner’s saved shopping data. It may be invalid or browser storage may be unavailable. Cart changes and purchases are paused; saved data is untouched. Check storage, then retry.';
+            }
+            updateCart();
+            updatePurchasedItems();
+        }
+
+        function checkLegacyShopping() {
+            try {
+                legacyNotice = localStorage.getItem('gnc_cart') !== null || localStorage.getItem('gnc_purchased') !== null
+                    ? 'Older shopping data has no known owner. It remains untouched in this browser and is not shown or assigned to any account or guest.' : '';
+            } catch (error) {
+                legacyNotice = 'Browser storage could not be checked for older shopping data. No older data has been imported.';
+            }
+        }
+
+        function retryShoppingStorage() {
+            if (authState !== 'initializing' && authState !== 'error' && !signingOut) syncAuthentication();
+            if (!shoppingOwner || shoppingOwner !== currentShoppingOwner()) return;
+            clearShoppingView();
+            loadShoppingOwner();
+            checkLegacyShopping();
+            renderAuthUI();
+        }
+
+        function requireShoppingOwner(expectedOwner = shoppingOwner, feedback = true) {
+            if (authState !== 'initializing' && authState !== 'error' && !signingOut) syncAuthentication();
+            if (shoppingReady && expectedOwner && expectedOwner === shoppingOwner && shoppingOwner === currentShoppingOwner()) return true;
+            if (feedback) showToast('Cart changes are paused until your account or guest storage is ready. Check the notice above.', 'error');
+            return false;
+        }
+
+        function saveShopping(nextCart, nextPurchased, checkout = false) {
+            const owner = shoppingOwner;
+            if (!validItems(nextCart) || !validItems(nextPurchased)) return false;
+            // Final identity check immediately before the single atomic storage write.
+            if (checkout && !requireCheckoutMember()) return false;
+            if (!requireShoppingOwner(owner)) return false;
+            if (checkout && !sameIdentity(checkoutIdentity, currentMemberIdentity())) return false;
+            try {
+                localStorage.setItem(owner, JSON.stringify({ version: 1, cart: nextCart, purchasedItems: nextPurchased }));
+            } catch (error) {
+                shoppingError = 'GnC could not save your shopping changes. Nothing was changed or purchased; your cart is retained. Free browser storage or allow storage, then retry your action.';
+                renderAuthUI();
+                showToast(shoppingError, 'error');
+                return false;
+            }
+            cart = nextCart;
+            purchasedItems = nextPurchased;
+            shoppingError = '';
+            renderAuthUI();
+            return true;
+        }
+
         // CART LOGIC
         function addToCart(guitarName) {
-            cart.push(guitarName);
-            localStorage.setItem('gnc_cart', JSON.stringify(cart));
+            if (!requireShoppingOwner() || !validProduct(guitarName)) return;
+            if (!saveShopping([...cart, guitarName], purchasedItems)) return;
             updateCart();
 
             showToast(`Added to cart: ${guitarName} 🛒`, 'success');
@@ -770,12 +936,13 @@
                 `;
                 cartPanel.appendChild(footer);
             }
+            updatePurchaseControls();
         }
 
         function removeFromCart(index) {
+            if (!requireShoppingOwner() || !Number.isInteger(index) || index < 0 || index >= cart.length) return;
             const removedItem = cart[index];
-            cart.splice(index, 1);
-            localStorage.setItem('gnc_cart', JSON.stringify(cart));
+            if (!saveShopping(cart.filter((item, i) => i !== index), purchasedItems)) return;
             updateCart();
 
             showToast(`Removed: ${removedItem} ❌`, 'error');
@@ -783,6 +950,7 @@
 
         // COUPON / PROMO CODE LOGIC
         function applyCoupon() {
+            if (!requireShoppingOwner()) return;
             const couponInput = document.getElementById('coupon-input');
             const couponStatus = document.getElementById('coupon-status');
             const applyBtn = document.getElementById('apply-coupon-btn');
@@ -821,7 +989,7 @@
                 showToast('Invalid coupon code! ❌', 'error');
                 // Shake animation
                 couponInput.classList.add('shake');
-                setTimeout(() => couponInput.classList.remove('shake'), 500);
+                scheduleShoppingCallback(() => couponInput.classList.remove('shake'), 500);
             }
         }
 
@@ -830,13 +998,10 @@
         let isCartCheckout = false;
 
         function buyNow(guitarName) {
-            // Block guests from purchasing
-            if (activeUser && activeUser.isGuest) {
-                document.getElementById('guest-gate-modal').style.display = 'block';
-                document.getElementById('overlay').style.display = 'block';
-                closeAllPanels();
-                return;
-            }
+            const identity = requireAuthenticatedMember();
+            if (!identity) return;
+            if (!requireShoppingOwner() || !validProduct(guitarName)) return;
+            checkoutIdentity = { ...identity };
             isCartCheckout = false;
             selectedGuitar = guitarName;
             document.getElementById("buy-now-modal").style.display = "block";
@@ -845,17 +1010,14 @@
         }
 
         function checkoutCart() {
-            // Block guests from purchasing
-            if (activeUser && activeUser.isGuest) {
-                document.getElementById('guest-gate-modal').style.display = 'block';
-                document.getElementById('overlay').style.display = 'block';
-                closeAllPanels();
-                return;
-            }
+            const identity = requireAuthenticatedMember();
+            if (!identity) return;
+            if (!requireShoppingOwner()) return;
             if (cart.length === 0) {
                 showToast('Your cart is empty! ⚠️', 'error');
                 return;
             }
+            checkoutIdentity = { ...identity };
             isCartCheckout = true;
             document.getElementById("buy-now-modal").style.display = "block";
             document.getElementById("overlay").style.display = "block";
@@ -916,6 +1078,8 @@
         }
 
         let trackingInterval = null;
+        let trackingCompletionTimer = null;
+        let trackingGeneration = 0;
         let currentTrackingStep = 0;
 
         function generateOrderId() {
@@ -927,6 +1091,8 @@
         }
 
         function proceedPurchase() {
+            if (!requireCheckoutMember()) return;
+
             const name = document.getElementById("name").value.trim();
             const address = document.getElementById("address").value.trim();
             const cellphone = document.getElementById("cellphone").value.trim();
@@ -943,26 +1109,17 @@
                 return;
             }
 
-            // Determine what was purchased
-            let confirmedGuitarText = '';
-
-            if (isCartCheckout) {
-                // Cart checkout — add all cart items to purchased
-                cart.forEach(item => purchasedItems.push(item));
-                confirmedGuitarText = cart.length === 1 ? cart[0] : `all ${cart.length} items in your cart`;
-
-                // Empty the cart
-                cart = [];
-                localStorage.setItem('gnc_cart', JSON.stringify(cart));
-                updateCart();
-            } else {
-                // Single item buy-now
-                purchasedItems.push(selectedGuitar);
-                confirmedGuitarText = selectedGuitar;
+            // Stage arrays without mutating the current view. Both arrays commit in one storage write.
+            if (!requireCheckoutMember()) return;
+            const items = isCartCheckout ? [...cart] : [selectedGuitar];
+            if (!items.length || !validItems(items)) {
+                showToast('Please choose a guitar before purchasing.', 'error');
+                return;
             }
-
-            // Save purchased items
-            localStorage.setItem('gnc_purchased', JSON.stringify(purchasedItems));
+            const confirmedGuitarText = items.length === 1 ? items[0] : `all ${items.length} items in your cart`;
+            if (!saveShopping(isCartCheckout ? [] : [...cart], [...purchasedItems, ...items], true)) return;
+            checkoutIdentity = null;
+            updateCart();
 
             // Populate receipt
             document.getElementById("receipt-order-id").textContent = generateOrderId();
@@ -980,43 +1137,60 @@
             document.getElementById("confirmed-cellphone").textContent = cellphone;
             document.getElementById("confirmation-modal").style.display = "block";
 
-            // Start live tracking
+            // Start this page's simulated tracking only for a newly saved purchase.
             startOrderTracking();
 
             // Reset flag
             isCartCheckout = false;
         }
 
-        function startOrderTracking() {
-            // Clear any existing interval
-            if (trackingInterval) clearInterval(trackingInterval);
+        function stopOrderTracking() {
+            trackingGeneration++;
+            if (trackingInterval !== null) clearInterval(trackingInterval);
+            if (trackingCompletionTimer !== null) {
+                clearTimeout(trackingCompletionTimer);
+                shoppingTimers.delete(trackingCompletionTimer);
+            }
+            trackingInterval = null;
+            trackingCompletionTimer = null;
+        }
 
-            // Reset tracker
+        function resetTrackingUI() {
             currentTrackingStep = 0;
-            const steps = document.querySelectorAll('.tracker-step');
-            const connectorFills = document.querySelectorAll('.tracker-connector-fill');
-
-            steps.forEach((step, i) => {
+            document.querySelectorAll('.tracker-step').forEach((step, i) => {
                 step.classList.remove('active', 'completed');
                 const timeEl = document.getElementById(`tracker-time-${i}`);
                 if (timeEl) timeEl.textContent = 'Pending';
             });
-            connectorFills.forEach(fill => {
+            document.querySelectorAll('.tracker-connector-fill').forEach(fill => {
                 fill.style.width = '0%';
             });
+        }
+
+        function startOrderTracking() {
+            stopOrderTracking();
+            resetTrackingUI();
+            document.getElementById('tracking-section').hidden = false;
+            const steps = document.querySelectorAll('.tracker-step');
+            const owner = shoppingOwner;
+            const generation = shoppingGeneration;
+            const run = trackingGeneration;
+            const stillCurrent = () => generation === shoppingGeneration && run === trackingGeneration &&
+                requireShoppingOwner(owner, false) && generation === shoppingGeneration && run === trackingGeneration;
 
             // Activate first step
             steps[0].classList.add('active');
             document.getElementById('tracker-time-0').textContent = getTimeNow();
 
             const trackingMessages = [
-                { msg: 'Your order has been placed! 📦', type: 'success' },
-                { msg: 'Your guitar is being prepared! 🔧', type: 'success' },
-                { msg: 'Your guitar is out for delivery! 🚚', type: 'success' },
-                { msg: 'Your guitar has been delivered! 🎉', type: 'success' }
+                { msg: 'Demo Tracking (Simulated): order placed. 📦', type: 'success' },
+                { msg: 'Demo Tracking (Simulated): preparing your guitar. 🔧', type: 'success' },
+                { msg: 'Demo Tracking (Simulated): out for delivery. 🚚', type: 'success' },
+                { msg: 'Demo Tracking (Simulated): delivered! No real delivery takes place. 🎉', type: 'success' }
             ];
 
             trackingInterval = setInterval(() => {
+                if (!stillCurrent()) return;
                 if (currentTrackingStep >= 3) {
                     clearInterval(trackingInterval);
                     trackingInterval = null;
@@ -1041,9 +1215,11 @@
 
                 // If final step, mark it completed after a short delay
                 if (currentTrackingStep === 3) {
-                    setTimeout(() => {
+                    trackingCompletionTimer = scheduleShoppingCallback(() => {
+                        if (!stillCurrent()) return;
                         steps[3].classList.remove('active');
                         steps[3].classList.add('completed');
+                        trackingCompletionTimer = null;
                     }, 1500);
                 }
             }, 4000);
@@ -1056,48 +1232,256 @@
             menu.classList.toggle('open');
         }
 
-        if (activeUser) {
-            const dropdownUsername = document.getElementById('dropdown-username');
-            const dropdownRole = document.getElementById('dropdown-role');
-            if (dropdownUsername) dropdownUsername.textContent = activeUser.username;
-            if (dropdownRole) dropdownRole.textContent = activeUser.isGuest ? 'Guest' : 'Member';
-        }
-
-        // LOGOUT
-        async function logoutUser() {
-            localStorage.removeItem('gnc_user');
-            // Sign out from Clerk if there's an active session
+        // STOREFRONT AUTH — client-side guards for the simulated checkout, not server authorization.
+        function cacheDisplayProfile(profile) {
             try {
-                if (window.Clerk && window.Clerk.user) {
-                    await window.Clerk.signOut();
-                }
-            } catch (e) {
-                console.error('Clerk sign-out error:', e);
+                if (profile) localStorage.setItem('gnc_user', JSON.stringify(profile));
+                else localStorage.removeItem('gnc_user');
+            } catch (error) {
+                console.warn('GnC profile cache is unavailable.');
             }
-            showToast('Logged out successfully! 👋', 'success');
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 1000);
         }
 
-        // ASYNC GATEKEEPER — session sync only (OAuth callbacks handled by login.html)
-        window.addEventListener('load', async () => {
-            await window.Clerk.load();
-            
-            if (window.Clerk.user) {
-                const user = window.Clerk.user;
-                activeUser = {
+        function sameIdentity(left, right) {
+            return !!left && !!right && left.userId === right.userId && left.sessionId === right.sessionId;
+        }
+
+        function currentMemberIdentity() {
+            if (!clerkClient || window.Clerk !== clerkClient || !clerkClient.loaded) return null;
+            const { user, session } = clerkClient;
+            if (!user?.id || !session?.id || session.status !== 'active' || session.user?.id !== user.id) return null;
+            if (session.expireAt && new Date(session.expireAt).getTime() <= Date.now()) return null;
+            return { userId: user.id, sessionId: session.id };
+        }
+
+        function invalidateCheckout() {
+            checkoutIdentity = null;
+            selectedGuitar = '';
+            isCartCheckout = false;
+            document.getElementById('buy-now-modal').style.display = 'none';
+            ['name', 'address', 'cellphone'].forEach(id => { document.getElementById(id).value = ''; });
+            if (!document.querySelector('.side-panel.open') &&
+                document.getElementById('confirmation-modal').style.display !== 'block' &&
+                document.getElementById('guest-gate-modal').style.display !== 'block') {
+                document.getElementById('overlay').style.display = 'none';
+            }
+        }
+
+        function updatePurchaseControls() {
+            const blocked = !shoppingReady || !shoppingOwner || signingOut;
+            document.querySelectorAll('.btn-buy-now, .cart-checkout-btn, #purchase-submit').forEach(button => {
+                button.disabled = blocked;
+            });
+            document.querySelectorAll('.btn-add-cart, .cart-item-remove, #apply-coupon-btn').forEach(button => {
+                button.disabled = blocked;
+            });
+            document.getElementById('coupon-input').disabled = blocked || !!appliedCoupon;
+        }
+
+        function renderAuthUI() {
+            document.getElementById('welcome-title').textContent = activeUser
+                ? `Welcome, ${activeUser.username}!` : 'Welcome to GnC — Gitara ni Cata';
+            document.getElementById('dropdown-username').textContent = activeUser?.username || 'GnC';
+            document.getElementById('dropdown-role').textContent = {
+                initializing: 'Checking account', member: 'Member', guest: 'Guest',
+                unauthenticated: 'Signed out', error: 'Account unavailable'
+            }[authState];
+
+            let message = '';
+            let retry = null;
+            if (signingOut) message = 'Signing out of your GnC account… Shopping details are hidden and cart changes are paused.';
+            else if (signOutError) { message = signOutError; retry = logoutUser; }
+            else if (authState === 'initializing') message = 'Checking your GnC account. Browse and search while cart changes are paused.';
+            else if (authState === 'error') { message = authFailure; retry = retryAuthentication; }
+            else if (authState === 'unauthenticated') message = 'You are signed out. Shopping details are hidden and cart changes are paused. Returning to login for sign-in or guest access.';
+            else if (!shoppingOwner) { message = 'Shopping is paused until your account or guest access is confirmed. You can browse and search. Please retry verification.'; retry = retryAuthentication; }
+            document.getElementById('auth-notice').hidden = !message && !shoppingError && !legacyNotice;
+            document.getElementById('auth-message').textContent = message;
+            document.getElementById('auth-message').hidden = !message;
+            document.getElementById('shopping-message').textContent = shoppingError;
+            document.getElementById('shopping-message').hidden = !shoppingError;
+            document.getElementById('legacy-message').textContent = legacyNotice;
+            document.getElementById('legacy-message').hidden = !legacyNotice;
+            document.getElementById('storage-retry-btn').hidden = !shoppingOwner || shoppingReady;
+            const retryButton = document.getElementById('auth-retry-btn');
+            retryButton.hidden = !retry;
+            retryButton.onclick = retry;
+            updatePurchaseControls();
+        }
+
+        function setAuthState(state, identity = null, profile = null) {
+            const changed = authState !== state || (authIdentity && !sameIdentity(authIdentity, identity));
+            const wasCheckingOut = !!checkoutIdentity;
+            authState = state;
+            authIdentity = identity;
+            activeUser = profile;
+            const nextOwner = currentShoppingOwner();
+            if (changed || shoppingOwner !== nextOwner) {
+                shoppingOwner = null;
+                shoppingReady = false;
+                shoppingError = '';
+                clearShoppingView();
+                shoppingOwner = nextOwner;
+                loadShoppingOwner();
+                if (wasCheckingOut && !signingOut) showToast('Your session changed. Please start checkout again.', 'error');
+            }
+            renderAuthUI();
+        }
+
+        function failAuthentication(message) {
+            authFailure = message;
+            if (stopAuthListener) stopAuthListener();
+            stopAuthListener = null;
+            setAuthState('error');
+        }
+
+        function syncAuthentication({ redirect = true } = {}) {
+            if (!clerkClient?.loaded || window.Clerk !== clerkClient || clerkClient.status === 'error' ||
+                clerkClient.user === undefined || clerkClient.session === undefined) {
+                failAuthentication('GnC could not verify your account. Cart changes and purchases are paused. Browse or search while you retry.');
+                return;
+            }
+            const identity = currentMemberIdentity();
+            if (identity) {
+                const user = clerkClient.user;
+                const profile = {
                     username: user.firstName || user.username || user.primaryEmailAddress?.emailAddress?.split('@')[0] || 'User',
                     email: user.primaryEmailAddress?.emailAddress || '',
                     isGuest: false
                 };
-                localStorage.setItem('gnc_user', JSON.stringify(activeUser));
-                const welcomeTitle = document.getElementById("welcome-title");
-                if (welcomeTitle) welcomeTitle.innerHTML = `Welcome, ${activeUser.username}!`;
-            } else if (!activeUser) {
-                window.location.href = 'login.html';
+                guestPreference = false;
+                cacheDisplayProfile(profile);
+                if (document.getElementById('guest-gate-modal').style.display === 'block') closeGuestGate();
+                setAuthState('member', identity, profile);
+            } else {
+                const profile = guestPreference ? { username: 'Guest', isGuest: true } : null;
+                cacheDisplayProfile(profile);
+                setAuthState(guestPreference ? 'guest' : 'unauthenticated', null, profile);
+                if (!guestPreference && redirect && !signingOut) window.location.replace('login.html');
             }
-        });
+        }
+
+        function withAuthTimeout(promise, message) {
+            let timer;
+            return Promise.race([
+                promise,
+                new Promise((resolve, reject) => { timer = setTimeout(() => reject(new Error(message)), AUTH_TIMEOUT_MS); })
+            ]).finally(() => clearTimeout(timer));
+        }
+
+        async function initializeAuthentication() {
+            if (initializationInProgress || signingOut) return;
+            initializationInProgress = true;
+            const attempt = ++initializationAttempt;
+            if (stopAuthListener) stopAuthListener();
+            stopAuthListener = null;
+            signOutError = '';
+            setAuthState('initializing');
+            let stopWaitingForScript = () => {};
+            try {
+                const sdkReady = window.Clerk ? Promise.resolve(window.Clerk) : new Promise((resolve, reject) => {
+                    const script = document.getElementById('clerk-script');
+                    if (!script) { reject(new Error('The account connection is unavailable.')); return; }
+                    const loaded = () => window.Clerk ? resolve(window.Clerk) : reject(new Error('The account connection is unavailable.'));
+                    const failed = () => reject(new Error('The account connection could not load.'));
+                    script.addEventListener('load', loaded);
+                    script.addEventListener('error', failed);
+                    stopWaitingForScript = () => {
+                        script.removeEventListener('load', loaded);
+                        script.removeEventListener('error', failed);
+                    };
+                });
+                const client = await withAuthTimeout(sdkReady.then(async clerk => {
+                    await clerk.load();
+                    return clerk;
+                }), 'The account check timed out.');
+                if (attempt !== initializationAttempt) return;
+                clerkClient = client;
+                syncAuthentication();
+                if (authState === 'error') return;
+                // Clerk JS v6 addListener returns an unsubscribe callback; only one subscription is kept.
+                stopAuthListener = client.addListener(() => {
+                    if (attempt === initializationAttempt && authState !== 'error') syncAuthentication();
+                });
+            } catch (error) {
+                if (attempt === initializationAttempt) {
+                    failAuthentication('GnC could not verify your account. Cart changes and purchases are paused. You can browse and search. Check your connection and retry.');
+                }
+            } finally {
+                stopWaitingForScript();
+                initializationInProgress = false;
+            }
+        }
+
+        function retryAuthentication() {
+            // Reload to re-request a missing/failed SDK script; otherwise retry load with a fresh subscription.
+            if (!window.Clerk) window.location.reload();
+            else initializeAuthentication();
+        }
+
+        function requireAuthenticatedMember() {
+            if (authState !== 'initializing' && authState !== 'error' && !signingOut) syncAuthentication();
+            if (authState === 'member' && !signingOut) return currentMemberIdentity();
+            if (authState === 'guest' && !signingOut) {
+                document.getElementById('guest-gate-modal').style.display = 'block';
+                document.getElementById('overlay').style.display = 'block';
+                closeAllPanels();
+            } else {
+                showToast(authState === 'error' ? 'Account verification is unavailable. Use Retry above.'
+                    : 'Please wait until your account is verified before purchasing.', 'error');
+            }
+            return null;
+        }
+
+        function requireCheckoutMember() {
+            const identity = requireAuthenticatedMember();
+            if (!identity) return false;
+            if (!sameIdentity(checkoutIdentity, identity)) {
+                invalidateCheckout();
+                showToast('Please start a new checkout with your current account.', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        async function logoutUser() {
+            if (signingOut) return;
+            if (authState === 'initializing' || authState === 'error') {
+                showToast('Please retry account verification before signing out.', 'error');
+                return;
+            }
+            const wasGuest = authState === 'guest';
+            signingOut = true;
+            signOutError = '';
+            setAuthState(authState, authIdentity, activeUser);
+            try {
+                if (!clerkClient?.loaded || window.Clerk !== clerkClient) throw new Error('Account connection unavailable.');
+                if (clerkClient.user || clerkClient.session) {
+                    await withAuthTimeout(clerkClient.signOut(), 'Sign-out timed out.');
+                }
+                if (clerkClient.user || clerkClient.session) throw new Error('Sign-out is not confirmed.');
+                guestPreference = false;
+                cacheDisplayProfile(null);
+                setAuthState('unauthenticated');
+                showToast(wasGuest ? 'Guest browsing ended.' : 'Logged out successfully! 👋', 'success');
+                window.location.replace('login.html');
+            } catch (error) {
+                syncAuthentication({ redirect: false });
+                if (authState === 'error') {
+                    authFailure = 'GnC could not confirm sign-out. Retry account verification, then try Log Out again.';
+                } else {
+                    signOutError = 'GnC could not confirm sign-out. Your account may still be signed in. Please retry.';
+                }
+            } finally {
+                signingOut = false;
+                // A failed sign-out may restore only the currently verified owner's saved arrays.
+                setAuthState(authState, authIdentity, activeUser);
+            }
+        }
+
+        // Start now, not on window.load: slow images or a stalled SDK must not delay the timeout.
+        initializeStorefront();
+        initializeAuthentication();
     </script>
 </body>
 

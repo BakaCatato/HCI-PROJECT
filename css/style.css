@@ -23,6 +23,46 @@ body {
     transition: background-color 0.4s ease, color 0.4s ease;
 }
 
+/* Account/storage feedback; browsing remains available while cart changes are paused. */
+.auth-notice {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(640px, calc(100% - 28px));
+    padding: 14px 18px;
+    border: 1px solid #d4a88c;
+    border-radius: 12px;
+    background: #2c211b;
+    color: white;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    z-index: 1000;
+    font-size: 13px;
+}
+
+.auth-notice[hidden] { display: none; }
+.auth-notice .notice-messages { flex: 1 1 260px; }
+.auth-notice p + p:not([hidden]) { margin-top: 6px; }
+.auth-notice button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background: #d4a88c;
+    color: #2c211b;
+    font: inherit;
+    cursor: pointer;
+}
+
+.btn-buy-now:disabled, .cart-checkout-btn:disabled, #purchase-submit:disabled,
+.btn-add-cart:disabled, .cart-item-remove:disabled, #apply-coupon-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* =============================================
    1. STICKY NAVBAR
    ============================================= */
