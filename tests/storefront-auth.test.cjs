@@ -13,7 +13,8 @@ const product = "GnC Cata's Lumanog Acoustic";
 const cachedMember = JSON.stringify({ username: 'Cached Member', isGuest: false });
 const cachedGuest = JSON.stringify({ username: 'Cached Guest', isGuest: true });
 const legacyAckKey = 'gnc_legacy_shopping_notice_v1';
-const ownerKey = id => 'gnc_shopping_v1:' + (id ? 'member:' + encodeURIComponent(id) : 'guest');
+const v1Key = id => 'gnc_shopping_v1:' + (id ? 'member:' + encodeURIComponent(id) : 'guest');
+const ownerKey = id => id ? 'gnc_shopping_v2:member:' + encodeURIComponent(id) : v1Key(null);
 const record = (cart = [], purchasedItems = []) => JSON.stringify({ version: 1, cart, purchasedItems });
 
 function deferred() {
@@ -46,7 +47,7 @@ function mockClerk(userId = null) {
     return clerk;
 }
 
-function boot({ clerk = mockClerk(), profile, cart = [product], storage = { [ownerKey(clerk?.user?.id)]: record(cart) }, faults = {} } = {}) {
+function boot({ clerk = mockClerk(), profile, cart = [product], storage = { [v1Key(clerk?.user?.id)]: record(cart) }, faults = {} } = {}) {
     if (profile !== undefined) storage.gnc_user = profile;
     const operations = [];
     function access(operation, key) {
@@ -119,7 +120,10 @@ function boot({ clerk = mockClerk(), profile, cart = [product], storage = { [own
     const location = { href: 'index.html', replacements: [], reloads: 0,
         replace(url) { this.href = url; this.replacements.push(url); }, reload() { this.reloads++; } };
     const window = { Clerk: clerk, location };
+    let now = Date.now();
+    class Clock extends Date { static now() { return now; } }
     const context = vm.createContext({
+        Date: Clock,
         document, window, console: { warn() {}, error() {}, log() {} },
         localStorage: {
             getItem(key) { access('read', key); return storage[key] ?? null; },
@@ -133,12 +137,13 @@ function boot({ clerk = mockClerk(), profile, cart = [product], storage = { [own
     for (const callback of documentEvents.get('DOMContentLoaded') || []) callback();
     return {
         clerk, storage, document, location, intervals, timers, faults, operations, get: id => nodes.get(id),
+        advance(ms) { now += ms; },
         run: code => vm.runInContext(code, context),
         async settle() { for (let i = 0; i < 20; i++) await Promise.resolve(); },
         timeout(ms = 12000) { for (const [id, timer] of [...timers]) if (timer.ms === ms) { timers.delete(id); timer.fn(); } },
         fill() { for (const [id, value] of Object.entries({ name: 'Test Customer', address: 'Demo address', cellphone: '09123456789' })) nodes.get(id).value = value; },
         storedShopping() { return JSON.stringify(Object.fromEntries(Object.entries(storage).filter(([key]) => key.startsWith('gnc_shopping_') || key === 'gnc_cart' || key === 'gnc_purchased'))); },
-        shopping() { return JSON.stringify({ cart: this.run('cart'), purchased: this.run('purchasedItems'), stored: this.storedShopping() }); },
+        shopping() { return JSON.stringify({ cart: this.run('cart'), earlier: this.run('earlierPurchases'), orders: this.run('orders'), stored: this.storedShopping() }); },
         toasts() {
             const content = node => node.textContent + node.children.map(content).join('');
             return nodes.get('toast-container').children.map(content).join('\n');
@@ -296,10 +301,10 @@ for (const mode of ['buy now', 'cart']) {
         const app = boot({ clerk: mockClerk('member_a') }); await app.settle();
         app.run(mode === 'cart' ? 'checkoutCart()' : 'buyNow(guitarDatabase[0].name)'); app.fill();
         app.run('proceedPurchase()');
-        assert.equal(app.run('purchasedItems.length'), 1);
-        assert.equal(JSON.parse(app.storage[ownerKey('member_a')]).purchasedItems[0], product);
+        assert.equal(app.run('orders.length'), 1);
+        assert.equal(JSON.parse(app.storage[ownerKey('member_a')]).orders[0].items[0].name, product);
         assert.equal(app.run('cart.length'), mode === 'cart' ? 0 : 1);
-        assert.equal(app.get('receipt-name').textContent, 'Test Customer');
+        assert.equal(app.get('confirmed-address').textContent, 'Demo address');
         assert.equal(app.get('confirmation-modal').style.display, 'block');
         assert.equal(app.intervals.size, 1); assert.equal(app.run('checkoutIdentity'), null);
         assertRejected(app, 'proceedPurchase()');
@@ -350,7 +355,7 @@ const thirdProduct = 'GnC Renus E-Guitar';
 
 function assertItems(app, cart, purchased = []) {
     assert.equal(JSON.stringify(app.run('cart')), JSON.stringify(cart));
-    assert.equal(JSON.stringify(app.run('purchasedItems')), JSON.stringify(purchased));
+    assert.equal(JSON.stringify(app.run('earlierPurchases.concat(orders.slice().reverse().flatMap(order => order.items.flatMap(item => Array(item.quantity).fill(item.name))))')), JSON.stringify(purchased));
 }
 
 function purchase(app, entry = 'checkoutCart()') {
@@ -359,7 +364,7 @@ function purchase(app, entry = 'checkoutCart()') {
 
 function assertDetailsCleared(app) {
     for (const id of ['name', 'address', 'cellphone']) assert.equal(app.get(id).value, '', id);
-    for (const id of ['receipt-name', 'receipt-address', 'receipt-phone', 'receipt-order-id']) assert.equal(app.get(id).textContent, '—', id);
+    for (const id of ['receipt-date', 'receipt-order-id']) assert.equal(app.get(id).textContent, '—', id);
     for (const id of ['confirmed-guitar', 'confirmed-address', 'confirmed-cellphone']) assert.equal(app.get(id).textContent, '', id);
     for (const id of ['buy-now-modal', 'confirmation-modal', 'overlay']) assert.equal(app.get(id).style.display, 'none', id);
     assert.equal(app.get('tracking-section').hidden, true);
@@ -375,8 +380,8 @@ function assertDetailsCleared(app) {
 
 test('member A, member B and guest keep independent arrays through switches, reloads and new sessions', async () => {
     const storage = {
-        [ownerKey('member_a')]: record([product], [thirdProduct]),
-        [ownerKey('member_b')]: record([secondProduct]),
+        [v1Key('member_a')]: record([product], [thirdProduct]),
+        [v1Key('member_b')]: record([secondProduct]),
         [ownerKey(null)]: record([thirdProduct]),
         unrelated_setting: 'keep me'
     };
@@ -414,7 +419,7 @@ test('guest cart never merges into a new or returning member, even with a cached
 
 test('member storage uses Clerk user ID despite identical email/name or a forged cache', async () => {
     const storage = {
-        [ownerKey('member_a')]: record([product]), [ownerKey('member_b')]: record([secondProduct])
+        [v1Key('member_a')]: record([product]), [v1Key('member_b')]: record([secondProduct])
     };
     const clerk = mockClerk('member_b');
     clerk.user.firstName = 'member_a'; clerk.user.primaryEmailAddress.emailAddress = 'member_a@example.test';
@@ -426,11 +431,10 @@ for (const change of ['account switch', 'logout', 'expiration', 'auth error', 'r
     test('transition clears all prior purchase details and cancels even queued delivery callbacks: ' + change, async () => {
         const clerk = mockClerk('member_a'), app = boot({ clerk }); await app.settle(); purchase(app);
         const before = app.storage[ownerKey('member_a')];
-        const tick = [...app.intervals.values()][0]; assert.equal(tick.ms, 4000);
-        tick.fn(); tick.fn(); tick.fn(); // Reach Delivered, with the existing final 1500ms delay pending.
+        const tick = [...app.intervals.values()][0]; assert.equal(tick.ms, 1000);
+        app.advance(12000); tick.fn();
         assert.match(app.toasts(), /Simulated.*delivered/);
         const queued = [...app.timers.values()].map(timer => timer.fn);
-        assert.equal([...app.timers.values()].some(timer => timer.ms === 1500), true);
         let pending;
         if (change === 'account switch') clerk.member('member_b');
         if (change === 'logout') pending = app.run('logoutUser()');
@@ -446,12 +450,12 @@ for (const change of ['account switch', 'logout', 'expiration', 'auth error', 'r
     });
 }
 
-test('new checkout cancels the older purchase tracking completion callback', async () => {
+test('new checkout cancels the older purchase tracking callback', async () => {
     const app = boot({ clerk: mockClerk('member_a') }); await app.settle(); purchase(app);
-    const oldTick = [...app.intervals.values()][0].fn; oldTick(); oldTick(); oldTick();
-    const oldCompletion = [...app.timers.values()].find(timer => timer.ms === 1500).fn;
+    const oldTick = [...app.intervals.values()][0].fn;
+    app.advance(8000); oldTick();
     purchase(app, 'buyNow(guitarDatabase[1].name)');
-    oldTick(); oldCompletion();
+    oldTick();
     assert.equal(app.run('currentTrackingStep'), 0);
     assert.equal(app.document.querySelectorAll('.tracker-step')[3].classList.contains('completed'), false);
     assert.equal(app.intervals.size, 1);
@@ -488,17 +492,17 @@ for (const owner of ['member_a', null]) {
         assert.equal(storage.gnc_cart, JSON.stringify([product])); assert.equal(storage.gnc_purchased, '{malformed legacy');
         assert.equal(storage.unrelated_setting, 'keep');
         assert.equal(app.operations.some(op => op.operation !== 'read' && ['gnc_cart', 'gnc_purchased'].includes(op.key)), false);
-        assert.equal(JSON.parse(storage[ownerKey(owner)]).purchasedItems.length, owner ? 1 : 0);
+        assert.equal((owner ? JSON.parse(storage[ownerKey(owner)]).orders : JSON.parse(storage[ownerKey(owner)]).purchasedItems).length, owner ? 1 : 0);
     });
 }
 
 for (const malformed of [
     '{bad json', 'null', '[]', '{}', record(null), record([], {}),
     record([null]), record([{ name: product }]), record(['<img src=x onerror=alert(1)>']),
-    record([], ['Removed product']), JSON.stringify({ version: 2, cart: [], purchasedItems: [] })
+    record([], [null]), JSON.stringify({ version: 2, cart: [], purchasedItems: [] })
 ]) {
     test('malformed owner data is preserved and mutations pause: ' + malformed, async () => {
-        const key = ownerKey('member_a'), storage = { [key]: malformed };
+        const key = v1Key('member_a'), storage = { [key]: malformed };
         const app = boot({ clerk: mockClerk('member_a'), storage }); await app.settle();
         assert.equal(app.run('authState'), 'member'); assertItems(app, []);
         assert.equal(app.run('shoppingReady'), false); assert.equal(app.get('storage-retry-btn').hidden, false);
@@ -513,7 +517,7 @@ for (const malformed of [
 
 test('storage read failure never exposes the prior owner and a retry reloads only the current owner', async () => {
     const clerk = mockClerk('member_a'), faults = {}, storage = {
-        [ownerKey('member_a')]: record([product]), [ownerKey('member_b')]: record([secondProduct], [thirdProduct])
+        [v1Key('member_a')]: record([product]), [v1Key('member_b')]: record([secondProduct], [thirdProduct])
     };
     const app = boot({ clerk, faults, storage }); await app.settle(); purchase(app);
     faults.read = ownerKey('member_b'); clerk.member('member_b');
@@ -594,13 +598,13 @@ test('guest logout preserves its saved cart and returning guest access restores 
 
 test('coupon state is cleared with owner changes and a failed save preserves previous purchase history', async () => {
     const key = ownerKey('member_a'), clerk = mockClerk('member_a');
-    const app = boot({ clerk, storage: { [key]: record([product], [thirdProduct]) } }); await app.settle();
+    const app = boot({ clerk, storage: { [v1Key('member_a')]: record([product], [thirdProduct]) } }); await app.settle();
     app.get('coupon-input').value = 'GNC2026'; app.run('applyCoupon()');
-    assert.ok(app.run('discount') > 0);
+    assert.ok(app.run('calculatePurchase(cart, appliedCoupon).discount') > 0);
     app.run('checkoutCart()'); app.fill(); app.faults.write = key;
     assertRejected(app, 'proceedPurchase()'); assertItems(app, [product], [thirdProduct]);
     clerk.member('member_b');
-    assert.equal(app.run('discount'), 0); assert.equal(app.run('appliedCoupon'), '');
+    assert.equal(app.run('calculatePurchase(cart, appliedCoupon).discount'), 0); assert.equal(app.run('appliedCoupon'), '');
     assert.equal(app.get('coupon-input').value, ''); assert.equal(app.get('coupon-status').innerHTML, '');
     assert.equal(app.get('shopping-message').hidden, true);
 });
@@ -641,7 +645,7 @@ test('unavailable legacy storage does not invent a legacy notice or crash render
 
 for (const failure of ['initializing', 'authentication', 'storage read', 'storage write', 'logout']) {
     test('legacy dismissal cannot hide actionable feedback or change authorization: ' + failure, async () => {
-        const clerk = mockClerk('member_a'), faults = {}, storage = { gnc_cart: '[]', [ownerKey('member_a')]: record([product]) };
+        const clerk = mockClerk('member_a'), faults = {}, storage = { gnc_cart: '[]', [v1Key('member_a')]: record([product]) };
         if (failure === 'initializing') clerk.load = () => new Promise(() => {});
         if (failure === 'authentication') clerk.load = async () => { throw new Error('offline'); };
         if (failure === 'storage read') faults.read = ownerKey('member_a');
@@ -795,4 +799,306 @@ test('Quick View clears unavailable details and keeps price guards through accou
     assert.equal(app.get('detail-photo').hidden, true);
     assert.equal(app.get('detail-actions').hidden, true);
     assert.equal(app.run('detailName'), null);
+});
+
+test('separate immutable receipts survive refresh with quantities, coupon rounding and earlier purchases', async () => {
+    const key = ownerKey('member_a');
+    const storage = { [v1Key('member_a')]: record([product, product], ['Discontinued guitar']) };
+    const app = boot({ clerk: mockClerk('member_a'), storage }); await app.settle();
+    assert.equal(app.get('earlier-items').children[0].textContent, 'Discontinued guitar');
+    app.run("guitarDatabase[0].price = '₱100.03'");
+    app.get('coupon-input').value = 'GNC2026'; app.run('applyCoupon()');
+    purchase(app, 'buyNow(guitarDatabase[1].name)');
+    assert.match(app.get('checkout-amount').textContent, /₱7,990.00/);
+    assert.deepEqual(JSON.parse(storage[key]).cart, [product, product]);
+    app.run('closeConfirmation(); checkoutCart()');
+    assert.match(app.get('checkout-amount').textContent, /₱180.05/);
+    app.fill(); app.run('proceedPurchase()');
+    assert.doesNotMatch(storage[key], /Test Customer|Demo address|09123456789/);
+    const { version, orders: [cartOrder, buyOrder], earlierPurchases } = JSON.parse(storage[key]);
+    assert.equal(version, 2); assert.notEqual(cartOrder.id, buyOrder.id);
+    assert.deepEqual(earlierPurchases, ['Discontinued guitar']);
+    assert.deepEqual(cartOrder.items, [{ name: product, quantity: 2, unitPrice: 10003 }]);
+    assert.deepEqual([cartOrder.subtotal, cartOrder.discount, cartOrder.total], [20006, 2001, 18005]);
+    assert.deepEqual([buyOrder.subtotal, buyOrder.discount, buyOrder.total], [799000, 0, 799000]);
+
+    const reload = boot({ clerk: mockClerk('member_a'), storage }); await reload.settle();
+    reload.advance(8500);
+    reload.run('togglePanel("purchased-panel")');
+    const [latest, first] = reload.get('order-history').children;
+    latest.onclick();
+    assert.equal(reload.get('receipt-order-id').textContent, cartOrder.id);
+    assert.equal(reload.get('receipt-total').textContent, '₱180.05');
+    assert.equal(reload.get('purchased-items').children[0].textContent, product + ' · 2 × ₱100.03');
+    assert.equal(reload.run('currentTrackingStep'), 2);
+    const queued = [...reload.intervals.values()][0].fn;
+    reload.run('togglePanel("purchased-panel")');
+    assert.equal(reload.intervals.size, 0);
+    reload.advance(4000); queued();
+    assert.equal(reload.run('currentTrackingStep'), 2);
+    reload.run('togglePanel("purchased-panel")');
+    reload.get('order-history').children[1].onclick();
+    assert.equal(reload.get('receipt-order-id').textContent, buyOrder.id);
+    assert.equal(reload.get('receipt-total').textContent, '₱7,990.00');
+    assert.equal(reload.run('currentTrackingStep'), 3);
+    assert.equal(reload.intervals.size, 0);
+    assert.doesNotMatch(reload.toasts(), /deliver/i);
+    reload.clerk.member('member_b'); first.onclick();
+    assert.equal(reload.get('order-history').children.length, 0);
+    assert.equal(reload.get('order-receipt').style.display, 'none');
+});
+
+test('a stale checkout cannot overwrite another tab’s completed order', async () => {
+    const key = ownerKey('member_a'), storage = { [v1Key('member_a')]: record([product]) };
+    const first = boot({ clerk: mockClerk('member_a'), storage });
+    const second = boot({ clerk: mockClerk('member_a'), storage });
+    await Promise.all([first.settle(), second.settle()]);
+    first.run('checkoutCart()'); first.fill();
+    purchase(second, 'buyNow(guitarDatabase[1].name)');
+    const saved = storage[key]; first.run('proceedPurchase()');
+    assert.equal(storage[key], saved);
+    assert.match(first.toasts(), /another tab/);
+    purchase(first); assert.equal(JSON.parse(storage[key]).orders.length, 2);
+});
+
+test('a historical receipt can reach Delivered while open without a notification', async () => {
+    const app = boot({ clerk: mockClerk('member_a') }); await app.settle();
+    purchase(app); app.run('closeConfirmation(); togglePanel("purchased-panel")');
+    app.get('order-history').children[0].onclick();
+    app.advance(12000); [...app.intervals.values()][0].fn();
+    assert.equal(app.run('currentTrackingStep'), 3);
+    assert.equal(app.intervals.size, 0);
+    assert.doesNotMatch(app.toasts(), /deliver/i);
+});
+
+test('failed discounted checkout preserves a previous order and retries at the displayed total', async () => {
+    const key = ownerKey('member_a'), app = boot({ clerk: mockClerk('member_a') });
+    await app.settle();
+    purchase(app, 'buyNow(guitarDatabase[1].name)'); app.run('closeConfirmation()');
+    app.get('coupon-input').value = 'GNC2026'; app.run('applyCoupon(); checkoutCart()'); app.fill();
+    const before = app.storage[key];
+    app.faults.write = key; app.run('proceedPurchase()');
+    assert.equal(app.storage[key], before);
+    assert.equal(app.get('confirmation-modal').style.display, 'none');
+    assert.equal(app.get('name').value, 'Test Customer');
+    assert.match(app.get('checkout-amount').textContent, /₱3,599\.10/);
+    delete app.faults.write; app.run('proceedPurchase()');
+    const saved = JSON.parse(app.storage[key]);
+    assert.deepEqual(saved.cart, []);
+    assert.equal(saved.orders.length, 2);
+    assert.deepEqual(saved.orders[1], JSON.parse(before).orders[0]);
+    assert.equal(saved.orders[0].total, 359910);
+});
+
+test('first successful checkout migrates only the verified member and stays authoritative across two reloads', async () => {
+    const id = 'member/a', oldKey = v1Key(id), key = ownerKey(id);
+    const cart = [product, secondProduct, product], earlier = ['Retired model', 'Retired model'];
+    const original = record(cart, earlier);
+    const storage = { [oldKey]: original, [v1Key('member_b')]: record([thirdProduct]), [v1Key(null)]: record([secondProduct]) };
+    const app = boot({ clerk: mockClerk(id), storage }); await app.settle();
+    const ownerOps = page => page.operations.filter(op => op.key.startsWith('gnc_shopping_'));
+    assert.deepEqual(ownerOps(app), [{ operation: 'read', key }, { operation: 'read', key: oldKey }]);
+    assertItems(app, cart, earlier);
+    assert.equal(app.run('orders.length'), 0);
+    app.faults.write = key;
+    purchase(app);
+    assert.equal(storage[key], undefined);
+    assert.equal(storage[oldKey], original);
+    assert.equal(app.get('buy-now-modal').style.display, 'block');
+    assert.equal(app.get('confirmation-modal').style.display, 'none');
+    assert.equal(app.intervals.size, 0);
+    assertItems(app, cart, earlier);
+    delete app.faults.write;
+    app.run('proceedPurchase()');
+    const saved = JSON.parse(storage[key]);
+    assert.deepEqual(saved.cart, []);
+    assert.deepEqual(saved.earlierPurchases, earlier);
+    assert.equal(saved.orders.length, 1);
+    assert.deepEqual(saved.orders[0].items.map(({ name, quantity }) => [name, quantity]), [[product, 2], [secondProduct, 1]]);
+    assert.deepEqual(ownerOps(app).filter(op => op.operation === 'write').map(op => op.key), [key, key]);
+    for (let i = 0; i < 2; i++) {
+        const reload = boot({ clerk: mockClerk(id), storage }); await reload.settle();
+        reload.run('togglePanel("purchased-panel")');
+        assert.deepEqual(ownerOps(reload), [{ operation: 'read', key }]);
+        assert.equal(reload.get('order-history').children.length, 1);
+        assert.deepEqual(reload.get('earlier-items').children.map(li => li.textContent), earlier);
+        reload.get('order-history').children[0].onclick();
+        assert.equal(reload.get('receipt-order-id').textContent, saved.orders[0].id);
+        assert.equal(reload.run('cart.length'), 0);
+    }
+    app.clerk.member('member_b');
+    assertItems(app, [thirdProduct]); assertDetailsCleared(app);
+    assert.equal(storage[ownerKey('member_b')], undefined);
+    const guest = boot({ storage, profile: cachedGuest }); await guest.settle();
+    guest.run('addToCart(guitarDatabase[0].name)');
+    assertItems(guest, [secondProduct, product]);
+    assert.ok(ownerOps(guest).every(op => op.key === v1Key(null)));
+    assert.equal(storage[oldKey], original);
+    assert.deepEqual(JSON.parse(storage[key]), saved);
+});
+
+test('cart edits carry forward receipts previously saved under a member’s v1 key', async () => {
+    const oldKey = v1Key('member_a'), key = ownerKey('member_a');
+    const order = {
+        id: '#GNC-previous', createdAt: 1750000000000,
+        items: [{ name: 'Retired guitar', quantity: 1, unitPrice: 99900 }],
+        subtotal: 99900, discount: 0, total: 99900
+    };
+    const original = JSON.stringify({ version: 2, cart: [product], earlierPurchases: [], orders: [order] });
+    const storage = { [oldKey]: original };
+    const app = boot({ clerk: mockClerk('member_a'), storage }); await app.settle();
+    assert.equal(storage[key], undefined);
+    app.run('removeFromCart(0)');
+    assert.deepEqual(JSON.parse(storage[key]), { version: 2, cart: [], earlierPurchases: [], orders: [order] });
+    assert.equal(storage[oldKey], original);
+});
+
+for (const failure of ['malformed v2', 'v1 shape under v2', 'unreadable v2', 'unreadable v1']) {
+    test(failure + ' blocks changes until storage retry', async () => {
+        const key = ownerKey('member_a'), oldKey = v1Key('member_a');
+        const storage = { [oldKey]: record([product], [thirdProduct]) }, faults = {};
+        if (failure === 'malformed v2') storage[key] = JSON.stringify({ version: 2, cart: [], earlierPurchases: [], orders: [{}] });
+        if (failure === 'v1 shape under v2') storage[key] = record([]);
+        if (failure.startsWith('unreadable')) faults.read = failure === 'unreadable v2' ? key : oldKey;
+        const app = boot({ clerk: mockClerk('member_a'), storage, faults }); await app.settle();
+        assert.equal(app.get('storage-retry-btn').hidden, false);
+        assertRejected(app, 'addToCart(guitarDatabase[0].name); checkoutCart(); proceedPurchase()');
+        assertItems(app, []);
+        if (failure !== 'unreadable v1') assert.equal(app.operations.some(op => op.key === oldKey), false);
+        storage[key] = JSON.stringify({ version: 2, cart: [], earlierPurchases: [], orders: [] });
+        delete faults.read;
+        app.operations.length = 0;
+        app.run('retryShoppingStorage(); addToCart(guitarDatabase[1].name)');
+        assertItems(app, [secondProduct]);
+        assert.equal(app.operations.some(op => op.key === oldKey), false);
+        assert.equal(storage[oldKey], record([product], [thirdProduct]));
+    });
+}
+
+test('grouped cart controls keep the unit badge, line price, focus and saved quantities in sync', async () => {
+    const app = boot({ clerk: mockClerk('member_a'), cart: [product, secondProduct, product] }); await app.settle();
+    const rows = app.get('cart-items');
+    const rowText = node => node.textContent + ' ' + node.children.map(rowText).join(' ');
+    assert.equal(rows.children.length, 2);
+    assert.match(rowText(rows.children[0]), /Qty 2.*Line total ₱7,998\.00/);
+    app.get('cart-product-0-plus').onclick();
+    assertItems(app, [product, secondProduct, product, product]);
+    assert.equal(app.get('cart-count').textContent, '4');
+    assert.equal(app.document.activeElement.id, 'cart-product-0-plus');
+    app.get('cart-product-0-minus').onclick();
+    assertItems(app, [product, secondProduct, product]);
+    app.faults.write = ownerKey('member_a');
+    for (const action of ['minus', 'plus', 'remove']) {
+        const previous = app.storedShopping();
+        app.get('cart-product-0-' + action).onclick();
+        assert.equal(app.storedShopping(), previous);
+        assert.equal(app.get('cart-count').textContent, '3');
+        assert.match(rowText(rows.children[0]), /Qty 2.*Line total ₱7,998\.00/);
+        assert.equal(app.get('cart-panel-error').hidden, false);
+    }
+    delete app.faults.write;
+    app.get('cart-product-0-remove').onclick();
+    assertItems(app, [secondProduct]);
+    app.get('cart-product-1-minus').onclick();
+    assertItems(app, []);
+    assert.equal(app.get('cart-footer').hidden, true);
+    assert.equal(app.document.activeElement.id, 'cart-state-action');
+});
+
+test('checkout review, field errors, save retry and receipt all use the displayed order', async () => {
+    const app = boot({ clerk: mockClerk('member_a'), cart: [product, product] }); await app.settle();
+    app.get('coupon-input').value = 'GNC2026'; app.run('applyCoupon(); checkoutCart(); proceedPurchase()');
+    assert.equal(app.get('checkout-items').children[0].textContent, product + ' · 2 × ₱3,999.00');
+    assert.equal(app.get('checkout-subtotal').textContent, '₱7,998.00');
+    assert.equal(app.get('checkout-discount').textContent, '−₱799.80');
+    assert.equal(app.get('checkout-amount').textContent, app.get('cart-total').textContent);
+    assert.equal(app.document.activeElement.id, 'name');
+    for (const id of ['name', 'address', 'cellphone']) {
+        assert.equal(app.get(id + '-error').hidden, false);
+        assert.equal(app.get(id).getAttribute('aria-invalid'), 'true');
+    }
+    app.fill(); app.get('cellphone').value = '09abcdefghi';
+    app.run('proceedPurchase()');
+    assert.equal(app.document.activeElement.id, 'cellphone');
+    assert.equal(app.get('name-error').hidden, true);
+    assert.equal(app.get('address').value, 'Demo address');
+    app.fill(); app.faults.write = ownerKey('member_a'); app.run('proceedPurchase()');
+    assert.equal(app.get('checkout-error').hidden, false);
+    assert.equal(app.get('purchase-submit').disabled, false);
+    delete app.faults.write; app.run('proceedPurchase(); proceedPurchase()');
+    assert.equal(app.run('orders.length'), 1);
+    assert.equal(app.get('receipt-total').textContent, '₱7,198.20');
+});
+
+test('changing member clears checkout review and rejects buttons from the prior cart', async () => {
+    const app = boot({ clerk: mockClerk('member_a') }); await app.settle();
+    const stale = app.get('cart-product-0-plus');
+    app.get('coupon-input').value = 'GNC2026';
+    app.run('applyCoupon(); buyNow(guitarDatabase[1].name)');
+    assert.equal(app.get('checkout-discount-row').hidden, true);
+    assert.equal(app.get('checkout-amount').textContent, '₱7,990.00');
+    app.clerk.member('member_b');
+    assert.equal(app.get('checkout-items').children.length, 0);
+    assert.equal(app.get('checkout-subtotal').textContent, '');
+    assert.equal(app.get('buy-now-modal').style.display, 'none');
+    app.run('addToCart(guitarDatabase[0].name)'); stale.onclick();
+    assertItems(app, [product]);
+});
+
+test('checkout reports all blank or over-limit fields beside their controls without changing the cart', async () => {
+    const app = boot({ clerk: mockClerk('member_a') }); await app.settle();
+    app.run('checkoutCart()');
+    const cases = [
+        ['   ', ' \n  ', '  ', 'Enter your full name.', 'Enter your delivery address.', 'Enter your mobile number.'],
+        ['a'.repeat(101), 'b'.repeat(251), '09abcdefghi', 'Full name must be 100 characters or fewer.',
+            'Delivery address must be 250 characters or fewer.', 'Enter an 11-digit mobile number starting with 09.']
+    ];
+    for (const [name, address, cellphone, ...messages] of cases) {
+        const values = { name, address, cellphone };
+        for (const [id, value] of Object.entries(values)) app.get(id).value = value;
+        assertRejected(app, 'proceedPurchase()');
+        assert.equal(app.document.activeElement.id, 'name');
+        for (const [index, id] of Object.keys(values).entries()) {
+            assert.equal(app.get(id).value, values[id]);
+            assert.equal(app.get(id).getAttribute('aria-invalid'), 'true');
+            assert.ok(app.get(id).getAttribute('aria-describedby').split(' ').includes(id + '-error'));
+            assert.equal(app.get(id + '-error').textContent, messages[index]);
+            assert.equal(app.get(id + '-error').hidden, false);
+        }
+        assert.equal(app.get('confirmation-modal').style.display, 'none');
+        assertItems(app, [product]);
+    }
+    app.get('name').value = 'Ana María O’Neill';
+    assertRejected(app, 'proceedPurchase()'); assert.equal(app.document.activeElement.id, 'address');
+});
+
+test('mobile validation rejects wrong lengths, prefixes, letters, internal spaces and dashes', async () => {
+    const app = boot({ clerk: mockClerk('member_a') }); await app.settle();
+    app.run('checkoutCart()'); app.fill();
+    for (const number of ['0912345678', '091234567890', '08123456789', '+639123456789', '09123a56789', '09123 456789', '09123-456789']) {
+        app.get('cellphone').value = number;
+        assertRejected(app, 'proceedPurchase()');
+        assert.equal(app.get('cellphone-error').textContent, 'Enter an 11-digit mobile number starting with 09.');
+        assert.equal(app.get('cellphone').value, number);
+        assert.equal(app.document.activeElement.id, 'cellphone');
+        assertItems(app, [product]);
+    }
+});
+
+test('trimmed checkout accepts Unicode and boundary lengths, preserves multiline addresses and retries privately', async () => {
+    for (const name of ['Ana María O’Neill', 'Ñ', 'Jose\u0301-Luis D\'Angelo Jr.', 'n\u0303'.repeat(100)]) {
+        const app = boot({ clerk: mockClerk('member_a') }); await app.settle(); app.run('checkoutCart()');
+        const address = 'Unit 3\nBarangay Uno\nQuezon City'.padEnd(250, 'a');
+        const values = { name: '  ' + name + ' ', address: ' \n' + address + '\n ', cellphone: ' 09123456789 ' };
+        for (const [id, value] of Object.entries(values)) app.get(id).value = value;
+        app.faults.write = ownerKey('member_a'); assertRejected(app, 'proceedPurchase()');
+        for (const [id, value] of Object.entries(values)) assert.equal(app.get(id).value, value);
+        assert.equal(app.get('checkout-error').hidden, false);
+        delete app.faults.write; app.run('proceedPurchase()');
+        assert.equal(app.get('confirmed-address').textContent, address);
+        assert.equal(app.get('confirmed-cellphone').textContent, '09123456789');
+        const saved = app.storage[ownerKey('member_a')];
+        assert.equal(JSON.parse(saved).orders.length, 1);
+        for (const privateText of [name, 'Barangay Uno', '09123456789']) assert.equal(saved.includes(privateText), false);
+    }
 });

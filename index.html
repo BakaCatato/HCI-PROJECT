@@ -255,35 +255,43 @@
             <h3>Shopping Cart</h3>
             <button id="cart-panel-close" class="close-btn" onclick="togglePanel('cart-panel')" aria-label="Close shopping cart">&times;</button>
         </div>
-        <div id="cart-legacy-notice" class="legacy-notice" hidden>
-            <p>Items from an earlier version aren’t shown.</p>
-            <button type="button" onclick="dismissLegacyShopping(this)" aria-label="Dismiss earlier-version items notice">Dismiss</button>
-        </div>
-        <p id="cart-panel-error" class="panel-error" role="status" hidden></p>
-        <div id="cart-empty-state" class="shopping-empty-state">
-            <svg aria-hidden="true" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            <h4 id="cart-state-title">Checking your account…</h4>
-            <p id="cart-state-description">You can browse while we get your shopping items ready.</p>
-            <button id="cart-state-action" class="panel-action" type="button" onclick="browseGuitars()">Browse Guitars</button>
-        </div>
-        <ul id="cart-items" class="item-list"></ul>
-        <!-- Coupon / Promo Code Section -->
-        <div class="coupon-section" id="coupon-section">
-            <div class="coupon-label">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="2" ry="2"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-                Promo Code
+        <div class="cart-scroll" id="cart-scroll">
+            <div id="cart-legacy-notice" class="legacy-notice" hidden>
+                <p>Items from an earlier version aren’t shown.</p>
+                <button type="button" onclick="dismissLegacyShopping(this)" aria-label="Dismiss earlier-version items notice">Dismiss</button>
             </div>
-            <div class="coupon-input-row">
-                <input type="text" id="coupon-input" placeholder="Enter coupon code..." autocomplete="off">
-                <button id="apply-coupon-btn" onclick="applyCoupon()">Apply</button>
+            <p id="cart-panel-error" class="panel-error" role="status" hidden></p>
+            <div id="cart-empty-state" class="shopping-empty-state">
+                <svg aria-hidden="true" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                <h4 id="cart-state-title">Checking your account…</h4>
+                <p id="cart-state-description">You can browse while we get your shopping items ready.</p>
+                <button id="cart-state-action" class="panel-action" type="button" onclick="browseGuitars()">Browse Guitars</button>
             </div>
-            <div class="coupon-status" id="coupon-status"></div>
+            <ul id="cart-items" class="item-list"></ul>
+            <!-- Coupon / Promo Code Section -->
+            <div class="coupon-section" id="coupon-section">
+                <label class="coupon-label" for="coupon-input">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="2" ry="2"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                    Promo Code
+                </label>
+                <div class="coupon-input-row">
+                    <input type="text" id="coupon-input" placeholder="Enter coupon code..." autocomplete="off">
+                    <button id="apply-coupon-btn" onclick="applyCoupon()">Apply</button>
+                </div>
+                <div class="coupon-status" id="coupon-status"></div>
+            </div>
+        </div>
+        <div class="cart-footer" id="cart-footer" hidden>
+            <div class="cart-total-row cart-subtotal-row" id="cart-subtotal-row"><span>Subtotal</span><span id="cart-subtotal"></span></div>
+            <div class="cart-total-row cart-discount-row" id="cart-discount-row"><span>GNC2026 · 10% off</span><span id="cart-discount"></span></div>
+            <div class="cart-total-row"><span>Total</span><strong class="cart-total-price" id="cart-total"></strong></div>
+            <button type="button" class="cart-checkout-btn" onclick="checkoutCart()">Checkout</button>
         </div>
     </div>
 
     <div id="purchased-panel" class="side-panel" inert>
         <div class="panel-header">
-            <h3>Purchases</h3>
+            <h3>Order History</h3>
             <button id="purchased-panel-close" class="close-btn" onclick="togglePanel('purchased-panel')" aria-label="Close purchases">&times;</button>
         </div>
         <div id="purchases-legacy-notice" class="legacy-notice" hidden>
@@ -299,30 +307,21 @@
             <button id="purchases-state-action" class="panel-action" type="button" onclick="browseGuitars()">Browse Guitars</button>
         </div>
 
+        <div id="order-history"></div>
+        <section id="earlier-purchases" hidden>
+            <h4>Earlier purchases</h4>
+            <ul id="earlier-items"></ul>
+        </section>
+
         <!-- Digital Receipt (hidden by default) -->
         <div id="order-receipt" class="order-receipt" style="display:none;">
             <!-- Receipt Header -->
             <div class="receipt-header">
                 <div class="receipt-logo">GnC</div>
-                <div class="receipt-order-id" id="receipt-order-id">#GNC-0000</div>
+                <div class="receipt-order-id" id="receipt-order-id" tabindex="-1">—</div>
             </div>
 
-            <!-- Customer Details -->
-            <div class="receipt-section">
-                <div class="receipt-section-title">Customer Details</div>
-                <div class="receipt-detail-row">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <span id="receipt-name">—</span>
-                </div>
-                <div class="receipt-detail-row">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    <span id="receipt-phone">—</span>
-                </div>
-                <div class="receipt-detail-row">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <span id="receipt-address">—</span>
-                </div>
-            </div>
+            <p class="receipt-section" id="receipt-date"></p>
 
             <!-- Purchased Items -->
             <div class="receipt-section">
@@ -330,7 +329,8 @@
                 <ul id="purchased-items" class="receipt-items-list"></ul>
             </div>
 
-            <!-- Receipt Total -->
+            <div class="receipt-detail-row receipt-amount"><span>Subtotal</span><span id="receipt-subtotal"></span></div>
+            <div class="receipt-detail-row receipt-amount"><span>Discount</span><span id="receipt-discount"></span></div>
             <div class="receipt-total-row" id="receipt-total-row">
                 <span>Total</span>
                 <span id="receipt-total">₱0</span>
@@ -385,23 +385,36 @@
     </div>
 
     <!--  MODALS  -->
-    <div id="buy-now-modal">
-        <h3>Complete Your Purchase</h3>
-        <label for="name">Name</label>
-        <input type="text" id="name" placeholder="Enter your full name">
-        <label for="address">Address</label>
-        <input type="text" id="address" placeholder="Enter delivery address">
-        <label for="cellphone">Cellphone Number</label>
-        <input type="tel" id="cellphone" placeholder="e.g. 09123456789" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-        <button id="purchase-submit" onclick="proceedPurchase()" disabled>Proceed to Buy</button>
-    </div>
+    <form id="buy-now-modal" role="dialog" aria-labelledby="checkout-title" novalidate onsubmit="event.preventDefault(); proceedPurchase()">
+        <h3 id="checkout-title" tabindex="-1">Review demo order</h3>
+        <ul id="checkout-items" class="checkout-lines"></ul>
+        <div class="checkout-totals">
+            <div><span>Subtotal</span><span id="checkout-subtotal"></span></div>
+            <div id="checkout-discount-row" hidden><span>GNC2026 · 10% off</span><span id="checkout-discount"></span></div>
+            <div><strong>Total</strong><strong id="checkout-amount"></strong></div>
+        </div>
+        <label for="name">Full name</label>
+        <input required type="text" id="name" autocomplete="name" aria-describedby="name-error">
+        <p id="name-error" class="field-error" hidden></p>
+        <label for="address">Delivery address</label>
+        <textarea required id="address" rows="3" autocomplete="street-address" aria-describedby="address-hint address-error"></textarea>
+        <small id="address-hint">House or unit number, street, barangay, and city or municipality</small>
+        <p id="address-error" class="field-error" hidden></p>
+        <label for="cellphone">Mobile number</label>
+        <input required type="tel" id="cellphone" inputmode="numeric" autocomplete="tel-national" aria-describedby="phone-format cellphone-error">
+        <small id="phone-format">11 digits starting with 09, e.g. 09123456789</small>
+        <p id="cellphone-error" class="field-error" hidden></p>
+        <p id="checkout-error" class="field-error" role="status" hidden></p>
+        <button id="purchase-submit" type="submit" disabled>Place Demo Order</button>
+        <button id="checkout-cancel" type="button" onclick="cancelCheckout()">Cancel</button>
+    </form>
 
     <div id="confirmation-modal">
         <h3>🎉 Salamat Po! 🎉</h3>
         <p>Your simulated purchase of <strong><span id="confirmed-guitar"></span></strong> has been saved in this browser. No payment or delivery will take place.</p>
         <p>Demo delivery address: <strong><span id="confirmed-address"></span></strong>.</p>
         <p>Demo contact number: <strong><span id="confirmed-cellphone"></span></strong>.</p>
-        <button onclick="closeConfirmation()">Awesome!</button>
+        <button id="confirmation-close" onclick="closeConfirmation()">Done</button>
     </div>
 
     <!-- GUEST GATE MODAL -->
@@ -433,6 +446,7 @@
         let authState = 'initializing'; // initializing | member | guest | unauthenticated | error
         let authIdentity = null;
         let checkoutIdentity = null;
+        let submittingOrder = false;
         let clerkClient = null;
         let stopAuthListener = null;
         let initializationAttempt = 0;
@@ -442,9 +456,13 @@
         let signOutError = '';
 
         // One atomic record per owner; unowned legacy keys are never imported or modified.
-        const SHOPPING_PREFIX = 'gnc_shopping_v1:';
+        const MEMBER_PREFIX = 'gnc_shopping_v2:member:';
+        const LEGACY_MEMBER_PREFIX = 'gnc_shopping_v1:member:';
+        const GUEST_KEY = 'gnc_shopping_v1:guest';
         let shoppingOwner = null;
         let shoppingReady = false;
+        let loadedRecord = null;
+        let migrationSource = null;
         let shoppingError = '';
         const LEGACY_NOTICE_ACK_KEY = 'gnc_legacy_shopping_notice_v1';
         let legacyDetected = false;
@@ -452,8 +470,9 @@
         let shoppingGeneration = 0;
         const shoppingTimers = new Set();
         let cart = [];
-        let purchasedItems = [];
-        let discount = 0;
+        let earlierPurchases = [];
+        let orders = [];
+        let selectedOrder = null;
         let appliedCoupon = '';
 
         // Guitar Database
@@ -729,7 +748,7 @@
             if (event.target.id === 'overlay') {
                 closeAllPanels();
                 invalidateCheckout();
-                document.getElementById('confirmation-modal').style.display = 'none';
+                closeConfirmation();
                 document.getElementById('guest-gate-modal').style.display = 'none';
                 document.getElementById('overlay').style.display = 'none';
             }
@@ -747,6 +766,7 @@
 
         // PANELS
         function togglePanel(panelId) {
+            if (shoppingReady) requireShoppingOwner(shoppingOwner, false);
             const panel = document.getElementById(panelId);
             const overlay = document.getElementById('overlay');
             const isOpen = panel.classList.contains('open');
@@ -768,6 +788,9 @@
         }
 
         function closeAllPanels() {
+            stopOrderTracking();
+            selectedOrder = null;
+            document.getElementById('order-receipt').style.display = 'none';
             document.querySelectorAll('.side-panel').forEach(panel => {
                 panel.classList.remove('open');
                 panel.inert = true;
@@ -799,7 +822,7 @@
             else if (shoppingError) feedback = ['Changes weren’t saved', 'Your previous items are unchanged. Please retry your last action.'];
 
             const cartVisible = ready && cart.length > 0;
-            const purchasesVisible = ready && authState === 'member' && purchasedItems.length > 0;
+            const purchasesVisible = ready && authState === 'member' && (earlierPurchases.length > 0 || orders.length > 0);
             const cartState = feedback || ['Your cart is empty', 'Find a guitar you love and add it to your cart.', 'Browse Guitars', browseGuitars];
             const purchasesState = feedback || (authState === 'guest'
                 ? ['Sign in to view purchases', 'An account is required to make simulated purchases. Your guest cart stays separate.', 'Sign In', signIn]
@@ -818,17 +841,17 @@
                 error.textContent = shoppingError;
             });
             document.getElementById('cart-items').hidden = !cartVisible;
-            document.getElementById('order-receipt').style.display = purchasesVisible ? 'block' : 'none';
+            document.getElementById('order-receipt').style.display = purchasesVisible && selectedOrder ? 'block' : 'none';
         }
 
         // SHOPPING OWNERSHIP — selected only after Clerk settles, never from a cached member profile.
         function currentShoppingOwner() {
             if (signingOut) return null;
             if (authState === 'member' && sameIdentity(authIdentity, currentMemberIdentity())) {
-                return SHOPPING_PREFIX + 'member:' + encodeURIComponent(authIdentity.userId);
+                return MEMBER_PREFIX + encodeURIComponent(authIdentity.userId);
             }
             if (authState === 'guest' && clerkClient?.loaded && window.Clerk === clerkClient &&
-                !clerkClient.user && !clerkClient.session) return SHOPPING_PREFIX + 'guest';
+                !clerkClient.user && !clerkClient.session) return GUEST_KEY;
             return null;
         }
 
@@ -843,7 +866,6 @@
         function clearShoppingView() {
             // Clear sensitive/transient UI before loading another owner, even if that read fails.
             shoppingGeneration++;
-            stopOrderTracking();
             shoppingTimers.forEach(timer => clearTimeout(timer));
             shoppingTimers.clear();
             document.getElementById('toast-container').innerHTML = '';
@@ -852,21 +874,26 @@
             closeGuestGate();
             invalidateCheckout();
             cart = [];
-            purchasedItems = [];
-            discount = 0;
+            earlierPurchases = [];
+            orders = [];
+            loadedRecord = null;
+            migrationSource = null;
             appliedCoupon = '';
             document.getElementById('coupon-input').classList.remove('shake');
-            ['receipt-order-id', 'receipt-name', 'receipt-phone', 'receipt-address'].forEach(id => {
+            ['receipt-order-id', 'receipt-date', 'receipt-subtotal', 'receipt-discount', 'checkout-amount'].forEach(id => {
                 document.getElementById(id).textContent = '—';
-            });
-            ['confirmed-guitar', 'confirmed-address', 'confirmed-cellphone'].forEach(id => {
-                document.getElementById(id).textContent = '';
             });
             document.getElementById('receipt-total').textContent = '₱0';
             document.getElementById('tracking-section').hidden = true;
+            document.getElementById("purchased-items").innerHTML = "";
             resetTrackingUI();
             updateCart();
             updatePurchasedItems();
+        }
+
+        function shoppingReadFailed() {
+            shoppingReady = false;
+            shoppingError = 'GnC could not read this owner’s saved shopping data. It may be invalid or browser storage may be unavailable. Cart changes and purchases are paused; saved data is untouched. Check storage, then retry.';
         }
 
         function loadShoppingOwner() {
@@ -875,16 +902,35 @@
             if (!shoppingOwner) return;
             try {
                 const raw = localStorage.getItem(shoppingOwner);
-                const data = raw === null ? { version: 1, cart: [], purchasedItems: [] } : JSON.parse(raw);
-                if (!data || data.version !== 1 || !validItems(data.cart) || !validItems(data.purchasedItems)) {
-                    throw new Error('Invalid shopping data');
+                const member = shoppingOwner !== GUEST_KEY;
+                let source = null;
+                if (member && raw === null) {
+                    const key = LEGACY_MEMBER_PREFIX + encodeURIComponent(authIdentity.userId);
+                    source = { key, raw: localStorage.getItem(key) };
+                }
+                const contents = source ? source.raw : raw;
+                const data = contents === null ? { version: 1, cart: [], purchasedItems: [] } : JSON.parse(contents);
+                // The previous checkout implementation also wrote order-shaped records under v1 member keys.
+                const validVersion = data?.version === 1 ? !member || raw === null : member && data?.version === 2;
+                if (!validVersion || !validItems(data.cart)) {
+                    throw new Error('Invalid shopping record');
+                }
+                const previous = data.version === 1 ? data.purchasedItems : data.earlierPurchases;
+                const history = data.version === 1 ? [] : data.orders;
+                if (!Array.isArray(previous) || !previous.every(name => typeof name === 'string' && name.trim()) ||
+                    !Array.isArray(history) || !history.every(validOrder) ||
+                    new Set(history.map(order => order.id)).size !== history.length) {
+                    throw new Error('Invalid purchase history');
                 }
                 cart = data.cart;
-                purchasedItems = data.purchasedItems;
+                earlierPurchases = previous;
+                orders = history;
+                loadedRecord = raw;
+                migrationSource = source;
                 shoppingReady = true;
             } catch (error) {
                 // Preserve unreadable data; do not overwrite it with an empty cart.
-                shoppingError = 'GnC could not read this owner’s saved shopping data. It may be invalid or browser storage may be unavailable. Cart changes and purchases are paused; saved data is untouched. Check storage, then retry.';
+                shoppingReadFailed();
             }
             updateCart();
             updatePurchasedItems();
@@ -929,15 +975,35 @@
             return false;
         }
 
-        function saveShopping(nextCart, nextPurchased, checkout = false) {
+        function saveShopping(nextCart, order = null) {
             const owner = shoppingOwner;
-            if (!validItems(nextCart) || !validItems(nextPurchased)) return false;
-            // Final identity check immediately before the single atomic storage write.
-            if (checkout && !requireCheckoutMember()) return false;
+            if (!validItems(nextCart) || (order && !validOrder(order))) return false;
+            if (order && !requireCheckoutMember()) return false;
             if (!requireShoppingOwner(owner)) return false;
-            if (checkout && !sameIdentity(checkoutIdentity, currentMemberIdentity())) return false;
+            if (order && !sameIdentity(checkoutIdentity, currentMemberIdentity())) return false;
+            const nextOrders = order ? [order, ...orders] : orders;
+            const record = authState === 'member'
+                ? { version: 2, cart: nextCart, earlierPurchases, orders: nextOrders }
+                : { version: 1, cart: nextCart, purchasedItems: earlierPurchases };
             try {
-                localStorage.setItem(owner, JSON.stringify({ version: 1, cart: nextCart, purchasedItems: nextPurchased }));
+                if (localStorage.getItem(owner) !== loadedRecord ||
+                    (migrationSource && localStorage.getItem(migrationSource.key) !== migrationSource.raw)) {
+                    retryShoppingStorage();
+                    showToast('Your saved shopping changed in another tab. Review it and try again.', 'error');
+                    return false;
+                }
+            } catch (error) {
+                clearShoppingView();
+                shoppingReadFailed();
+                renderAuthUI();
+                return false;
+            }
+            if (!requireShoppingOwner(owner) || (order && !requireCheckoutMember())) return false;
+            try {
+                const serialized = JSON.stringify(record);
+                localStorage.setItem(owner, serialized);
+                loadedRecord = serialized;
+                migrationSource = null;
             } catch (error) {
                 shoppingError = 'GnC could not save your shopping changes. Nothing was changed or purchased; your cart is retained. Free browser storage or allow storage, then retry your action.';
                 renderAuthUI();
@@ -945,7 +1011,7 @@
                 return false;
             }
             cart = nextCart;
-            purchasedItems = nextPurchased;
+            orders = nextOrders;
             shoppingError = '';
             renderAuthUI();
             return true;
@@ -954,48 +1020,75 @@
         // CART LOGIC
         function addToCart(guitarName) {
             if (!requireShoppingOwner() || !validProduct(guitarName)) return;
-            if (!saveShopping([...cart, guitarName], purchasedItems)) return;
+            if (!saveShopping([...cart, guitarName])) return;
             updateCart();
 
             showToast(`Added to cart: ${guitarName} 🛒`, 'success');
         }
 
         function updateCart() {
-            let cartList = document.getElementById("cart-items");
-            let cartPanel = document.getElementById("cart-panel");
-            let couponSection = document.getElementById("coupon-section");
-            cartList.innerHTML = "";
-            let totalAmount = 0;
-
-            cart.forEach((item, index) => {
-                let guitar = guitarDatabase.find(g => g.name === item);
-                let priceValue = 0;
-                let imageSrc = '';
-                let priceStr = '';
-                
-                if (guitar) {
-                    priceStr = guitar.price;
-                    imageSrc = guitar.image;
-                    // Parse price: remove ₱ and commas
-                    let numericPrice = priceStr.replace(/[₱,]/g, '');
-                    priceValue = parseFloat(numericPrice);
-                    if (!isNaN(priceValue)) totalAmount += priceValue;
+            const cartList = document.getElementById('cart-items');
+            const couponSection = document.getElementById('coupon-section');
+            const lines = groupCartItems(cart);
+            const quote = priceSummary(lines, appliedCoupon);
+            const owner = shoppingOwner;
+            cartList.innerHTML = '';
+            for (const { name, quantity, unitPrice } of lines) {
+                const guitar = guitarDatabase.find(g => g.name === name);
+                const li = document.createElement('li');
+                li.className = 'cart-item';
+                const photo = document.createElement('img');
+                photo.className = 'cart-item-img';
+                photo.src = guitar.image;
+                photo.alt = '';
+                li.appendChild(photo);
+                const details = document.createElement('div');
+                details.className = 'cart-item-details';
+                const title = document.createElement('strong');
+                title.className = 'cart-item-name';
+                title.textContent = name;
+                const unit = document.createElement('span');
+                unit.textContent = unitPrice === null ? 'Price unavailable' : formatMoney(unitPrice) + ' each';
+                details.appendChild(title);
+                details.appendChild(unit);
+                li.appendChild(details);
+                const actions = document.createElement('div');
+                actions.className = 'cart-row-actions';
+                const count = document.createElement('span');
+                count.textContent = 'Qty ' + quantity;
+                count.setAttribute('aria-label', 'Quantity ' + quantity);
+                const id = 'cart-product-' + guitarDatabase.indexOf(guitar);
+                for (const [action, text, label] of [
+                    ['minus', '−', 'Remove one unit of '],
+                    ['plus', '+', 'Add one unit of '],
+                    ['remove', 'Remove', 'Remove all units of ']
+                ]) {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'cart-row-button';
+                    button.id = id + '-' + action;
+                    button.textContent = text;
+                    button.title = label + name;
+                    button.setAttribute('aria-label', button.title);
+                    button.onclick = () => {
+                        if (!requireShoppingOwner(owner) || !cart.includes(name)) return;
+                        if (action === 'plus') addToCart(name);
+                        else if (action === 'minus') removeFromCart(cart.lastIndexOf(name));
+                        else if (saveShopping(cart.filter(item => item !== name))) updateCart();
+                        const target = document.getElementById(button.id) || document.querySelector('.cart-row-button') ||
+                            document.getElementById('cart-state-action');
+                        target.focus();
+                    };
+                    actions.appendChild(button);
+                    if (action === 'minus') actions.appendChild(count);
                 }
-
-                let li = document.createElement("li");
-                li.className = "cart-item";
-                li.innerHTML = `
-                    <img src="${imageSrc}" alt="${item}" class="cart-item-img">
-                    <div class="cart-item-details">
-                        <div class="cart-item-name">${item}</div>
-                        <div class="cart-item-price">${priceStr}</div>
-                    </div>
-                    <button class="cart-item-remove" onclick="removeFromCart(${index})" title="Remove item">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    </button>
-                `;
+                li.appendChild(actions);
+                const amount = document.createElement('strong');
+                amount.className = 'cart-line-total';
+                amount.textContent = unitPrice === null ? 'Price unavailable' : 'Line total ' + formatMoney(unitPrice * quantity);
+                li.appendChild(amount);
                 cartList.appendChild(li);
-            });
+            }
 
             document.getElementById("cart-count").textContent = cart.length;
 
@@ -1006,7 +1099,6 @@
 
             // Reset discount if cart is emptied
             if (cart.length === 0) {
-                discount = 0;
                 appliedCoupon = '';
                 let couponInput = document.getElementById('coupon-input');
                 let couponStatus = document.getElementById('coupon-status');
@@ -1016,50 +1108,12 @@
                 if (applyBtn) { applyBtn.textContent = 'Apply'; applyBtn.classList.remove('applied'); }
             }
 
-            // Recalculate discount amount based on current total
-            if (appliedCoupon === 'GNC2026') {
-                discount = totalAmount * 0.10;
-            } else {
-                discount = 0;
-            }
-
-            let existingFooter = document.getElementById("cart-footer");
-            if (existingFooter) existingFooter.remove();
-
-            if (cart.length > 0) {
-                let finalTotal = totalAmount - discount;
-                let formattedSubtotal = '₱' + totalAmount.toLocaleString('en-US');
-                let formattedDiscount = '−₱' + discount.toLocaleString('en-US');
-                let formattedTotal = '₱' + finalTotal.toLocaleString('en-US');
-
-                let footer = document.createElement("div");
-                footer.id = "cart-footer";
-                footer.className = "cart-footer";
-
-                let discountRowHTML = '';
-                if (discount > 0) {
-                    discountRowHTML = `
-                        <div class="cart-total-row cart-subtotal-row">
-                            <span>Subtotal:</span>
-                            <span class="cart-subtotal-price">${formattedSubtotal}</span>
-                        </div>
-                        <div class="cart-total-row cart-discount-row">
-                            <span>Discount (10%):</span>
-                            <span class="cart-discount-price">${formattedDiscount}</span>
-                        </div>
-                    `;
-                }
-
-                footer.innerHTML = `
-                    ${discountRowHTML}
-                    <div class="cart-total-row">
-                        <span>Total:</span>
-                        <span class="cart-total-price">${formattedTotal}</span>
-                    </div>
-                    <button class="cart-checkout-btn" onclick="checkoutCart()">Checkout</button>
-                `;
-                cartPanel.appendChild(footer);
-            }
+            document.getElementById('cart-footer').hidden = cart.length === 0;
+            document.getElementById('cart-subtotal-row').hidden = !quote?.discount;
+            document.getElementById('cart-discount-row').hidden = !quote?.discount;
+            document.getElementById('cart-subtotal').textContent = quote ? formatMoney(quote.subtotal) : '';
+            document.getElementById('cart-discount').textContent = quote ? '−' + formatMoney(quote.discount) : '';
+            document.getElementById('cart-total').textContent = quote ? formatMoney(quote.total) : 'Price unavailable';
             updatePurchaseControls();
             renderShoppingStates();
         }
@@ -1067,7 +1121,7 @@
         function removeFromCart(index) {
             if (!requireShoppingOwner() || !Number.isInteger(index) || index < 0 || index >= cart.length) return;
             const removedItem = cart[index];
-            if (!saveShopping(cart.filter((item, i) => i !== index), purchasedItems)) return;
+            if (!saveShopping(cart.filter((item, i) => i !== index))) return;
             updateCart();
 
             showToast(`Removed: ${removedItem} ❌`, 'error');
@@ -1090,7 +1144,6 @@
             // If a coupon is already applied, allow removing it
             if (appliedCoupon && applyBtn.classList.contains('applied')) {
                 appliedCoupon = '';
-                discount = 0;
                 couponInput.value = '';
                 couponInput.disabled = false;
                 couponStatus.innerHTML = '';
@@ -1121,17 +1174,17 @@
         // BUY NOW / PURCHASE LOGIC
         let selectedGuitar = "";
         let isCartCheckout = false;
+        let checkoutQuote = null;
 
         function buyNow(guitarName) {
             const identity = requireAuthenticatedMember();
             if (!identity) return;
             if (!requireShoppingOwner() || !validProduct(guitarName)) return;
+            if (!showCheckoutAmount([guitarName], '')) return;
             checkoutIdentity = { ...identity };
             isCartCheckout = false;
             selectedGuitar = guitarName;
-            document.getElementById("buy-now-modal").style.display = "block";
-            document.getElementById("overlay").style.display = "block";
-            closeAllPanels();
+            openCheckoutForm();
         }
 
         function checkoutCart() {
@@ -1142,15 +1195,34 @@
                 showToast('Your cart is empty! ⚠️', 'error');
                 return;
             }
+            if (!showCheckoutAmount(cart, appliedCoupon)) return;
             checkoutIdentity = { ...identity };
             isCartCheckout = true;
-            document.getElementById("buy-now-modal").style.display = "block";
-            document.getElementById("overlay").style.display = "block";
+            openCheckoutForm();
+        }
+
+        function openCheckoutForm() {
             closeAllPanels();
+            document.getElementById('toast-container').textContent = '';
+            updatePurchaseControls();
+            document.getElementById('buy-now-modal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('checkout-title').focus();
+            document.getElementById('buy-now-modal').scrollTop = 0;
+        }
+
+        function cancelCheckout() {
+            const fromCart = isCartCheckout;
+            invalidateCheckout();
+            if (fromCart) togglePanel('cart-panel');
+            else document.getElementById('collection-section').focus();
         }
 
         function closeConfirmation() {
             document.getElementById("confirmation-modal").style.display = "none";
+            ['confirmed-guitar', 'confirmed-address', 'confirmed-cellphone'].forEach(id => {
+                document.getElementById(id).textContent = '';
+            });
             document.getElementById("overlay").style.display = 'none';
             document.getElementById("name").value = "";
             document.getElementById("address").value = "";
@@ -1162,74 +1234,162 @@
             document.getElementById('overlay').style.display = 'none';
         }
 
-        function updatePurchasedItems() {
-            const purchasedList = document.getElementById("purchased-items");
+        const formatMoney = centavos => '₱' + (centavos / 100).toLocaleString('en-PH', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
+        });
 
-            purchasedList.innerHTML = "";
-
-            if (purchasedItems.length === 0) {
-                renderShoppingStates();
-                return;
+        function groupCartItems(names) {
+            const lines = new Map();
+            for (const name of names) {
+                if (!lines.has(name)) {
+                    const price = guitarDatabase.find(guitar => guitar.name === name)?.price;
+                    let unitPrice = null;
+                    if (usablePrice(price)) {
+                        const [pesos, cents = '00'] = price.trim().slice(1).replaceAll(',', '').split('.');
+                        unitPrice = Number(pesos + cents);
+                    }
+                    lines.set(name, { name, quantity: 0, unitPrice });
+                }
+                lines.get(name).quantity++;
             }
+            return [...lines.values()];
+        }
 
-            let receiptTotal = 0;
-            purchasedItems.forEach(item => {
-                let guitar = guitarDatabase.find(g => g.name === item);
-                let priceStr = guitar ? guitar.price : '₱0';
-                let imageSrc = guitar ? guitar.image : '';
-                let numericPrice = priceStr.replace(/[₱,]/g, '');
-                let priceValue = parseFloat(numericPrice);
-                if (!isNaN(priceValue)) receiptTotal += priceValue;
+        function priceSummary(items, coupon) {
+            if (items.some(item => !Number.isSafeInteger(item.unitPrice))) return null;
+            const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+            if (!Number.isSafeInteger(subtotal)) return null;
+            const discount = coupon === 'GNC2026' ? Math.round(subtotal / 10) : 0;
+            return { items, subtotal, discount, total: subtotal - discount };
+        }
 
-                let li = document.createElement("li");
-                li.className = "receipt-item";
-                li.innerHTML = `
-                    <img src="${imageSrc}" alt="${item}" class="receipt-item-img">
-                    <div class="receipt-item-details">
-                        <div class="receipt-item-name">${item}</div>
-                        <div class="receipt-item-price">${priceStr}</div>
-                    </div>
-                `;
-                purchasedList.appendChild(li);
-            });
+        function calculatePurchase(names, coupon) {
+            return priceSummary(groupCartItems(names), coupon);
+        }
 
-            document.getElementById("receipt-total").textContent = '₱' + receiptTotal.toLocaleString('en-US');
+        function validOrder(order) {
+            const amount = n => Number.isSafeInteger(n) && n >= 0;
+            return order && typeof order.id === 'string' && order.id.length > 0 &&
+                amount(order.createdAt) && Number.isFinite(new Date(order.createdAt).getTime()) &&
+                Array.isArray(order.items) && order.items.length > 0 &&
+                order.items.every(item => item && typeof item.name === 'string' && item.name.trim() &&
+                    Number.isSafeInteger(item.quantity) && item.quantity > 0 && amount(item.unitPrice)) &&
+                [order.subtotal, order.discount, order.total].every(amount) &&
+                order.subtotal === order.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0) &&
+                order.total === order.subtotal - order.discount;
+        }
+
+        function showCheckoutAmount(names, coupon) {
+            const quote = calculatePurchase(names, coupon);
+            if (!quote) {
+                showToast('A price is unavailable. Please review your items.', 'error');
+                return false;
+            }
+            checkoutQuote = quote;
+            renderPurchaseItems('checkout-items', quote.items);
+            document.getElementById('checkout-subtotal').textContent = formatMoney(quote.subtotal);
+            document.getElementById('checkout-discount-row').hidden = !quote.discount;
+            document.getElementById('checkout-discount').textContent = '−' + formatMoney(quote.discount);
+            document.getElementById('checkout-amount').textContent = formatMoney(quote.total);
+            return true;
+        }
+
+        function updatePurchasedItems() {
+            const history = document.getElementById('order-history');
+            const earlier = document.getElementById('earlier-items');
+            history.innerHTML = '';
+            earlier.innerHTML = '';
+            if (shoppingReady && authState === 'member') {
+                for (const order of orders) {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'order-entry';
+                    button.textContent = order.id + ' · ' + new Date(order.createdAt).toLocaleString() +
+                        ' · ' + formatMoney(order.total);
+                    button.onclick = () => {
+                        if (!requireShoppingOwner() || !orders.includes(order)) return;
+                        displayOrder(order, false);
+                        document.getElementById('receipt-order-id').focus();
+                    };
+                    history.appendChild(button);
+                }
+                for (const name of earlierPurchases) {
+                    const li = document.createElement('li');
+                    li.textContent = name;
+                    earlier.appendChild(li);
+                }
+            }
+            document.getElementById('earlier-purchases').hidden = !earlier.children.length;
             renderShoppingStates();
         }
 
+        function renderPurchaseItems(listId, items) {
+            const list = document.getElementById(listId);
+            list.innerHTML = '';
+            for (const item of items) {
+                const li = document.createElement('li');
+                li.textContent = item.name + ' · ' + item.quantity + ' × ' + formatMoney(item.unitPrice);
+                if (listId === 'purchased-items') li.className = 'receipt-item';
+                list.appendChild(li);
+            }
+        }
+
+        function displayOrder(order, notify) {
+            selectedOrder = order;
+            document.getElementById('receipt-order-id').textContent = order.id;
+            document.getElementById('receipt-date').textContent = new Date(order.createdAt).toLocaleString();
+            renderPurchaseItems('purchased-items', order.items);
+            for (const key of ['subtotal', 'discount', 'total']) {
+                document.getElementById('receipt-' + key).textContent = formatMoney(order[key]);
+            }
+            renderShoppingStates();
+            startOrderTracking(order, notify);
+        }
+
         let trackingInterval = null;
-        let trackingCompletionTimer = null;
         let trackingGeneration = 0;
         let currentTrackingStep = 0;
 
-        function generateOrderId() {
-            return '#GNC-' + (1000 + Math.floor(Math.random() * 9000));
-        }
+        const checkoutCharacters = typeof Intl.Segmenter === 'function'
+            ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
 
-        function getTimeNow() {
-            return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        function checkoutTextError(value, limit, label, requiredMessage) {
+            if (!value) return requiredMessage;
+            let length = 0;
+            for (const character of checkoutCharacters?.segment(value) ?? value.normalize('NFC')) {
+                if (++length > limit) return label + ' must be ' + limit + ' characters or fewer.';
+            }
+            return '';
         }
 
         function proceedPurchase() {
-            if (!requireCheckoutMember()) return;
+            if (submittingOrder || !requireCheckoutMember()) return;
 
             const name = document.getElementById("name").value.trim();
             const address = document.getElementById("address").value.trim();
             const cellphone = document.getElementById("cellphone").value.trim();
 
-            // Validate all fields are filled
-            if (!name || !address || !cellphone) {
-                showToast("Please fill out all fields before proceeding! ⚠️", "error");
+            const errors = {
+                name: checkoutTextError(name, 100, 'Full name', 'Enter your full name.'),
+                address: checkoutTextError(address, 250, 'Delivery address', 'Enter your delivery address.'),
+                cellphone: ''
+            };
+            if (!cellphone) errors.cellphone = 'Enter your mobile number.';
+            else if (!/^09[0-9]{9}$/.test(cellphone)) errors.cellphone = 'Enter an 11-digit mobile number starting with 09.';
+            let firstInvalid = null;
+            for (const [id, message] of Object.entries(errors)) {
+                const field = document.getElementById(id);
+                field.setAttribute('aria-invalid', String(!!message));
+                const error = document.getElementById(id + '-error');
+                error.textContent = message;
+                error.hidden = !message;
+                if (message && !firstInvalid) firstInvalid = field;
+            }
+            if (firstInvalid) {
+                firstInvalid.focus();
                 return;
             }
 
-            // Validate cellphone: must be exactly 11 digits and start with "09"
-            if (cellphone.length !== 11 || !cellphone.startsWith('09')) {
-                showToast('Phone number must be 11 digits starting with 09! 📱', 'error');
-                return;
-            }
-
-            // Stage arrays without mutating the current view. Both arrays commit in one storage write.
             if (!requireCheckoutMember()) return;
             const items = isCartCheckout ? [...cart] : [selectedGuitar];
             if (!items.length || !validItems(items)) {
@@ -1237,17 +1397,40 @@
                 return;
             }
             const confirmedGuitarText = items.length === 1 ? items[0] : `all ${items.length} items in your cart`;
-            if (!saveShopping(isCartCheckout ? [] : [...cart], [...purchasedItems, ...items], true)) return;
+            const quote = calculatePurchase(items, isCartCheckout ? appliedCoupon : '');
+            if (!quote) {
+                showToast('A price is unavailable. Please review your items.', 'error');
+                return;
+            }
+            if (JSON.stringify(quote) !== JSON.stringify(checkoutQuote)) {
+                showCheckoutAmount(items, isCartCheckout ? appliedCoupon : '');
+                showToast('Your checkout changed. Review the total before continuing.', 'error');
+                return;
+            }
+            const createdAt = Date.now();
+            const order = { id: '#GNC-' + createdAt.toString(36).toUpperCase() + '-' + (orders.length + 1), createdAt, ...quote };
+            submittingOrder = true;
+            document.getElementById('purchase-submit').disabled = true;
+            let saved;
+            try {
+                saved = saveShopping(isCartCheckout ? [] : cart, order);
+            } finally {
+                submittingOrder = false;
+            }
+            if (!saved) {
+                updatePurchaseControls();
+                if (checkoutIdentity && shoppingError) {
+                    const feedback = document.getElementById('checkout-error');
+                    feedback.textContent = shoppingError;
+                    feedback.hidden = false;
+                }
+                return;
+            }
+            document.getElementById('checkout-error').hidden = true;
             checkoutIdentity = null;
+            checkoutQuote = null;
             updateCart();
 
-            // Populate receipt
-            document.getElementById("receipt-order-id").textContent = generateOrderId();
-            document.getElementById("receipt-name").textContent = name;
-            document.getElementById("receipt-phone").textContent = cellphone;
-            document.getElementById("receipt-address").textContent = address;
-
-            // Update purchased items display
             updatePurchasedItems();
 
             // Show confirmation modal
@@ -1256,27 +1439,21 @@
             document.getElementById("confirmed-address").textContent = address;
             document.getElementById("confirmed-cellphone").textContent = cellphone;
             document.getElementById("confirmation-modal").style.display = "block";
+            document.getElementById("confirmation-close").focus();
 
-            // Start this page's simulated tracking only for a newly saved purchase.
-            startOrderTracking();
+            displayOrder(order, true);
 
-            // Reset flag
             isCartCheckout = false;
         }
 
         function stopOrderTracking() {
             trackingGeneration++;
             if (trackingInterval !== null) clearInterval(trackingInterval);
-            if (trackingCompletionTimer !== null) {
-                clearTimeout(trackingCompletionTimer);
-                shoppingTimers.delete(trackingCompletionTimer);
-            }
             trackingInterval = null;
-            trackingCompletionTimer = null;
         }
 
         function resetTrackingUI() {
-            currentTrackingStep = 0;
+            currentTrackingStep = -1;
             document.querySelectorAll('.tracker-step').forEach((step, i) => {
                 step.classList.remove('active', 'completed');
                 const timeEl = document.getElementById(`tracker-time-${i}`);
@@ -1287,7 +1464,7 @@
             });
         }
 
-        function startOrderTracking() {
+        function startOrderTracking(order, notify) {
             stopOrderTracking();
             resetTrackingUI();
             document.getElementById('tracking-section').hidden = false;
@@ -1298,53 +1475,33 @@
             const stillCurrent = () => generation === shoppingGeneration && run === trackingGeneration &&
                 requireShoppingOwner(owner, false) && generation === shoppingGeneration && run === trackingGeneration;
 
-            // Activate first step
-            steps[0].classList.add('active');
-            document.getElementById('tracker-time-0').textContent = getTimeNow();
-
-            const trackingMessages = [
-                { msg: 'Demo Tracking (Simulated): order placed. 📦', type: 'success' },
-                { msg: 'Demo Tracking (Simulated): preparing your guitar. 🔧', type: 'success' },
-                { msg: 'Demo Tracking (Simulated): out for delivery. 🚚', type: 'success' },
-                { msg: 'Demo Tracking (Simulated): delivered! No real delivery takes place. 🎉', type: 'success' }
-            ];
-
-            trackingInterval = setInterval(() => {
+            const stageDuration = 4000;
+            function refreshStage() {
                 if (!stillCurrent()) return;
-                if (currentTrackingStep >= 3) {
-                    clearInterval(trackingInterval);
-                    trackingInterval = null;
-                    return;
+                const elapsed = Math.max(0, Date.now() - order.createdAt);
+                const stage = Math.min(3, Math.floor(elapsed / stageDuration));
+                if (stage === currentTrackingStep) return;
+                const advanced = currentTrackingStep >= 0 && stage > currentTrackingStep;
+                currentTrackingStep = stage;
+                steps.forEach((step, i) => {
+                    step.classList.remove('active', 'completed');
+                    if (i <= stage) {
+                        step.classList.add(i < stage || stage === 3 ? 'completed' : 'active');
+                        document.getElementById('tracker-time-' + i).textContent =
+                            new Date(order.createdAt + i * stageDuration).toLocaleTimeString();
+                    }
+                    if (i < 3) document.getElementById('connector-fill-' + i).style.width = i < stage ? '100%' : '0%';
+                });
+                if (stage === 3) {
+                    stopOrderTracking();
+                    if (notify && advanced) showToast('Demo Tracking (Simulated): delivered! No real delivery takes place.', 'success');
                 }
-
-                // Complete current step
-                steps[currentTrackingStep].classList.remove('active');
-                steps[currentTrackingStep].classList.add('completed');
-
-                // Fill connector between current and next step
-                const connectorFill = document.getElementById(`connector-fill-${currentTrackingStep}`);
-                if (connectorFill) connectorFill.style.width = '100%';
-
-                // Advance to next step
-                currentTrackingStep++;
-                steps[currentTrackingStep].classList.add('active');
-                document.getElementById(`tracker-time-${currentTrackingStep}`).textContent = getTimeNow();
-
-                // Show toast
-                showToast(trackingMessages[currentTrackingStep].msg, trackingMessages[currentTrackingStep].type);
-
-                // If final step, mark it completed after a short delay
-                if (currentTrackingStep === 3) {
-                    trackingCompletionTimer = scheduleShoppingCallback(() => {
-                        if (!stillCurrent()) return;
-                        steps[3].classList.remove('active');
-                        steps[3].classList.add('completed');
-                        trackingCompletionTimer = null;
-                    }, 1500);
-                }
-            }, 4000);
+            }
+            refreshStage();
+            if (run === trackingGeneration) {
+                trackingInterval = setInterval(refreshStage, 1000);
+            }
         }
-
 
         // PROFILE DROPDOWN
         function toggleProfileDropdown() {
@@ -1360,6 +1517,7 @@
 
         document.addEventListener('keydown', event => {
             if (event.key !== 'Escape' || detailDialog.open) return;
+            if (checkoutIdentity) { cancelCheckout(); return; }
             if (document.getElementById('profile-dropdown-menu').classList.contains('open')) {
                 closeProfileDropdown();
                 document.getElementById('profile-toggle').focus();
@@ -1393,10 +1551,22 @@
 
         function invalidateCheckout() {
             checkoutIdentity = null;
+            checkoutQuote = null;
             selectedGuitar = '';
             isCartCheckout = false;
             document.getElementById('buy-now-modal').style.display = 'none';
-            ['name', 'address', 'cellphone'].forEach(id => { document.getElementById(id).value = ''; });
+            document.getElementById('checkout-items').innerHTML = '';
+            for (const id of ['checkout-amount', 'checkout-subtotal', 'checkout-discount', 'checkout-error']) {
+                document.getElementById(id).textContent = '';
+            }
+            document.getElementById('checkout-error').hidden = true;
+            document.getElementById('checkout-discount-row').hidden = true;
+            for (const id of ['name', 'address', 'cellphone']) {
+                const field = document.getElementById(id);
+                field.value = '';
+                field.setAttribute('aria-invalid', 'false');
+                document.getElementById(id + '-error').hidden = true;
+            }
             if (!document.querySelector('.side-panel.open') &&
                 document.getElementById('confirmation-modal').style.display !== 'block' &&
                 document.getElementById('guest-gate-modal').style.display !== 'block') {
@@ -1406,10 +1576,11 @@
 
         function updatePurchaseControls() {
             const blocked = !shoppingReady || !shoppingOwner || signingOut;
-            document.querySelectorAll('.btn-buy-now, .cart-checkout-btn, #purchase-submit').forEach(button => {
+            document.querySelectorAll('.btn-buy-now, .cart-checkout-btn').forEach(button => {
                 button.disabled = blocked;
             });
-            document.querySelectorAll('.btn-add-cart, .cart-item-remove, #apply-coupon-btn').forEach(button => {
+            document.getElementById('purchase-submit').disabled = blocked || !checkoutIdentity || submittingOrder;
+            document.querySelectorAll('.btn-add-cart, .cart-row-button, #apply-coupon-btn').forEach(button => {
                 button.disabled = blocked;
             });
             document.getElementById('coupon-input').disabled = blocked || !!appliedCoupon;
