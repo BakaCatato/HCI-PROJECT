@@ -766,8 +766,33 @@ test('browse action closes panels, scrolls and focuses the collection; Escape cl
 test('every product card uses consistent actions while preserving guarded handlers', async () => {
     const app = boot({ profile: cachedGuest }); await app.settle();
     const cards = app.get('guitar-grid').innerHTML;
-    assert.equal((cards.match(/>Buy Now<\/button>/g) || []).length, 12);
+    assert.equal((cards.match(/>View Details<\/button>/g) || []).length, 12);
+    assert.doesNotMatch(cards, /buyNow\(/);
     assert.equal((cards.match(/Add to Cart\s*<\/button>/g) || []).length, 12);
-    assert.equal((cards.match(/buyNow\('/g) || []).length, 12); assert.equal((cards.match(/addToCart\('/g) || []).length, 12);
+    assert.equal((cards.match(/openQuickView\('/g) || []).length, 12);
+    assert.equal((cards.match(/addToCart\('/g) || []).length, 12);
     assertRejected(app, 'buyNow(guitarDatabase[0].name); proceedPurchase()');
+});
+
+test('Quick View clears unavailable details and keeps price guards through account refreshes', async () => {
+    const app = boot({ profile: cachedGuest });
+    await app.settle();
+    app.run("const guitar = guitarDatabase[0]; guitar.image = ''; renderQuickView(guitar.name)");
+    assert.equal(app.get('detail-photo').textContent, 'No photo available');
+    assert.equal(app.get('detail-add').disabled, false);
+
+    app.run("guitar.description = ' '; guitar.category = ''; guitar.price = ''; renderQuickView(guitar.name); renderAuthUI()");
+    assert.equal(app.get('detail-description').textContent, 'No description available yet.');
+    assert.equal(app.get('detail-category').hidden, true);
+    assert.equal(app.get('detail-price').textContent, 'Price unavailable');
+    assert.equal(app.get('detail-price-note').hidden, false);
+    assert.equal(app.get('detail-add').disabled, true);
+    assert.equal(app.get('detail-buy').disabled, true);
+
+    app.run("renderQuickView('Removed guitar')");
+    assert.equal(app.get('detail-name').textContent, 'This guitar is no longer available.');
+    assert.equal(app.get('detail-price').textContent, '');
+    assert.equal(app.get('detail-photo').hidden, true);
+    assert.equal(app.get('detail-actions').hidden, true);
+    assert.equal(app.run('detailName'), null);
 });

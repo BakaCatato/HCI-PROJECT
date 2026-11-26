@@ -42,7 +42,7 @@
                     <circle cx="11" cy="11" r="8" />
                     <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
-                <input type="text" id="search-input" class="search-bar" placeholder="Search guitars..."
+                <input type="text" id="search-input" class="search-bar" aria-label="Search guitars" placeholder="Search guitars..."
                     oninput="filterGuitars()">
             </div>
 
@@ -131,13 +131,12 @@
 
     <!--  HERO SECTION  -->
     <section class="hero">
-        <div class="hero-overlay"></div>
         <div class="hero-content">
-            <span class="hero-badge">Premium Guitar Collection</span>
-            <h1 id="welcome-title">Welcome to GnC — Gitara ni Cata</h1>
-            <p class="hero-subtitle" id="hero-subtitle">Find your perfect match and let the music begin!</p>
-            <a href="#collection-section" class="hero-cta" onclick="document.getElementById('collection-section').scrollIntoView({ behavior: 'smooth' });">
-                Shop Collection
+            <span id="welcome-title" class="studio-brand">Gitara ni Cata</span>
+            <h1 lang="fil">Hanapin ang tunog mo.</h1>
+            <p class="hero-subtitle">Explore acoustic, electric, and bass guitars from Gitara ni Cata.</p>
+            <a href="#collection-section" class="hero-cta">
+                Shop Guitars
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="5" y1="12" x2="19" y2="12" />
@@ -145,6 +144,7 @@
                 </svg>
             </a>
         </div>
+        <img class="studio-photo" src="assets/cata1.png" alt="GnC Cata's Lumanog Acoustic">
     </section>
 
     <aside id="auth-notice" class="auth-notice" aria-label="Account status">
@@ -159,24 +159,51 @@
     <!--  FILTER PILLS  -->
     <section class="search-filter-container" id="collection-section" tabindex="-1" aria-label="Guitar collection">
         <h2 class="section-title">Our Collection</h2>
-        <div class="filter-buttons">
-            <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
-            <button class="filter-btn" onclick="setFilter('acoustic', this)">Acoustic</button>
-            <button class="filter-btn" onclick="setFilter('electric', this)">Electric</button>
-            <button class="filter-btn" onclick="setFilter('bass', this)">Bass</button>
+        <div class="collection-toolbar">
+            <div class="filter-buttons">
+                <button class="filter-btn active" aria-pressed="true" onclick="setFilter('all', this)">All</button>
+                <button class="filter-btn" aria-pressed="false" onclick="setFilter('acoustic', this)">Acoustic</button>
+                <button class="filter-btn" aria-pressed="false" onclick="setFilter('electric', this)">Electric</button>
+                <button class="filter-btn" aria-pressed="false" onclick="setFilter('bass', this)">Bass</button>
+            </div>
+            <label>Sort by <select id="collection-sort" onchange="filterGuitars()">
+                <option value="featured">Featured</option>
+                <option value="ascending">Price: Low to High</option>
+                <option value="descending">Price: High to Low</option>
+            </select></label>
         </div>
+        <p id="result-count" role="status"></p>
     </section>
 
     <!--  PRODUCT GRID  -->
     <section class="products-section">
         <div class="container">
-            <div class="guitar-grid" id="guitar-grid">
-                <div id="no-results" class="no-results">
-                    Aww, wala kaming nakitang gitara na ganyan. Subukan mag-type ng iba! 🎸
-                </div>
+            <div class="guitar-grid" id="guitar-grid"></div>
+            <div id="no-results" class="no-results" hidden>
+                <h3>No matching guitars</h3>
+                <p>Try another name or category.</p>
+                <button class="filter-btn" onclick="clearFilters()">Clear Filters</button>
             </div>
         </div>
     </section>
+
+    <dialog id="quick-view" aria-labelledby="detail-name">
+        <button type="button" class="filter-btn detail-close" id="detail-close" autofocus onclick="closeQuickView()">Close</button>
+        <div class="detail-layout">
+            <div id="detail-photo" class="detail-photo"></div>
+            <div class="detail-copy">
+                <p id="detail-category" class="card-category"></p>
+                <h2 id="detail-name"></h2>
+                <p id="detail-description"></p>
+                <p id="detail-price" class="price"></p>
+                <p id="detail-price-note" hidden>This guitar can’t be purchased until its price is available.</p>
+                <div id="detail-actions" class="buttons">
+                    <button id="detail-add" class="btn-add-cart" onclick="shopQuickView(addToCart)">Add to Cart</button>
+                    <button id="detail-buy" class="btn-buy-now" onclick="shopQuickView(buyNow)">Buy Now</button>
+                </div>
+            </div>
+        </div>
+    </dialog>
 
     <!--  FOOTER  -->
     <footer class="site-footer">
@@ -193,9 +220,9 @@
             <div class="footer-col">
                 <h4>Shop</h4>
                 <ul>
-                    <li><a href="#" onclick="setFilter('acoustic', document.querySelector('.filter-btn:nth-child(2)'))">Acoustic Guitars</a></li>
-                    <li><a href="#" onclick="setFilter('electric', document.querySelector('.filter-btn:nth-child(3)'))">Electric Guitars</a></li>
-                    <li><a href="#" onclick="setFilter('bass', document.querySelector('.filter-btn:nth-child(4)'))">Bass Guitars</a></li>
+                    <li><a href="#collection-section" onclick="setFilter('acoustic', document.querySelector('.filter-btn:nth-child(2)'))">Acoustic Guitars</a></li>
+                    <li><a href="#collection-section" onclick="setFilter('electric', document.querySelector('.filter-btn:nth-child(3)'))">Electric Guitars</a></li>
+                    <li><a href="#collection-section" onclick="setFilter('bass', document.querySelector('.filter-btn:nth-child(4)'))">Bass Guitars</a></li>
                 </ul>
             </div>
             <div class="footer-col">
@@ -482,30 +509,10 @@
         }
 
 
-        // GREETING
-   
-        function getGreeting() {
-            const hour = new Date().getHours();
-            if (hour < 12) {
-                return "Good morning! ☀️";
-            } else if (hour < 18) {
-                return "Good afternoon! 🌤";
-            } else {
-                return "Good evening! 🌙";
-            }
-        }
-
         // The markup is already parsed here; a stalled deferred Clerk script must not block browsing.
         function initializeStorefront() {
             checkLegacyShopping();
-            const greeting = getGreeting();
-
-            const heroSub = document.getElementById('hero-subtitle');
-            if (heroSub) {
-                heroSub.textContent = `${greeting} Ready kana ba sa susunod mong gitara?`;
-            }
-
-            renderGuitars();
+            filterGuitars();
             updateCart();
             updatePurchasedItems();
 
@@ -522,11 +529,11 @@
         }
 
         // RENDER GUITAR CARDS (Premium Template)
-        function renderGuitars() {
+        function renderGuitars(guitars) {
             const grid = document.getElementById('guitar-grid');
             let cardsHTML = '';
 
-            guitarDatabase.forEach(guitar => {
+            guitars.forEach(guitar => {
                 const safeName = guitar.name.replace(/'/g, "\\'");
 
                 cardsHTML += `
@@ -534,13 +541,6 @@
                     <div class="card-image">
                         <div class="image-wrapper">
                             <img src="${guitar.image}" alt="${guitar.name}" loading="lazy">
-                            <div class="buttons">
-                                <button class="btn-buy-now" onclick="event.stopPropagation(); buyNow('${safeName}')">Buy Now</button>
-                                <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart('${safeName}')">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                                    Add to Cart
-                                </button>
-                            </div>
                         </div>
                     </div>
                     <div class="card-info">
@@ -551,18 +551,82 @@
                         </label>
                         <p class="description">${guitar.description}</p>
                         <p class="price">${guitar.price}</p>
+                        <div class="buttons">
+                            <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart('${safeName}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                                Add to Cart
+                            </button>
+                            <button class="btn-details" aria-haspopup="dialog" onclick="event.stopPropagation(); openQuickView('${safeName}', this)">View Details</button>
+                        </div>
                     </div>
                 </div>
                 `;
             });
 
-            cardsHTML += `
-            <div id="no-results" class="no-results">
-                Aww, wala kaming nakitang gitara na ganyan. Subukan mag-type ng iba! 🎸
-            </div>`;
-
             grid.innerHTML = cardsHTML;
             updatePurchaseControls();
+        }
+
+        let detailName = null;
+        const detailDialog = document.getElementById('quick-view');
+
+        function usablePrice(price) {
+            return typeof price === 'string' &&
+                /^₱(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{2})?$/.test(price.trim()) &&
+                Number.isFinite(Number(price.trim().slice(1).replaceAll(',', '')));
+        }
+
+        function renderQuickView(name) {
+            detailName = null;
+            const guitar = typeof name === 'string' && name.trim()
+                ? guitarDatabase.find(item => item.name === name) : null;
+            const photo = document.getElementById('detail-photo');
+            photo.textContent = guitar ? 'No photo available' : '';
+            photo.hidden = !guitar;
+            if (guitar?.image?.trim()) {
+                const image = document.createElement('img');
+                image.alt = guitar.name;
+                image.onerror = () => {
+                    if (image.parentNode === photo) photo.textContent = 'No photo available';
+                };
+                image.src = guitar.image;
+                photo.replaceChildren(image);
+            }
+            const category = document.getElementById('detail-category');
+            category.textContent = guitar?.category?.trim() || '';
+            category.hidden = !category.textContent;
+            document.getElementById('detail-name').textContent = guitar?.name || 'This guitar is no longer available.';
+            document.getElementById('detail-description').textContent = guitar
+                ? guitar.description?.trim() || 'No description available yet.' : '';
+            const priced = usablePrice(guitar?.price);
+            document.getElementById('detail-price').textContent = guitar ? (priced ? guitar.price : 'Price unavailable') : '';
+            document.getElementById('detail-price-note').hidden = !guitar || priced;
+            document.getElementById('detail-actions').hidden = !guitar;
+            if (guitar && priced) detailName = name;
+            updatePurchaseControls();
+        }
+
+        function openQuickView(name, trigger) {
+            renderQuickView(name);
+            trigger.focus({ preventScroll: true });
+            detailDialog.showModal();
+            detailDialog.scrollTop = 0;
+        }
+
+        function closeQuickView() {
+            detailName = null;
+            detailDialog.close();
+        }
+
+        function shopQuickView(handler) {
+            if (!detailDialog.open || !detailName) return;
+            const guitar = guitarDatabase.find(item => item.name === detailName);
+            if (!usablePrice(guitar?.price)) {
+                renderQuickView(detailName);
+                return;
+            }
+            closeQuickView();
+            handler(guitar.name);
         }
 
         // FILTER LOGIC
@@ -571,43 +635,37 @@
         function setFilter(category, btnElement) {
             currentCategoryFilter = category;
 
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            if (btnElement) btnElement.classList.add('active');
-
+            document.querySelectorAll('.filter-buttons button').forEach(button => {
+                button.classList.toggle('active', button === btnElement);
+                button.setAttribute('aria-pressed', String(button === btnElement));
+            });
             filterGuitars();
         }
 
         function filterGuitars() {
-            const searchQuery = document.getElementById('search-input').value.toLowerCase();
-            const cards = document.querySelectorAll('.guitar-card');
-            let visibleCount = 0;
-
-            cards.forEach(card => {
-                const guitarName = card.querySelector('label span').textContent.toLowerCase();
-                const guitarCategory = card.getAttribute('data-category');
-
-                const matchesSearch = guitarName.includes(searchQuery);
-                const matchesCategory = (currentCategoryFilter === 'all') || (guitarCategory === currentCategoryFilter);
-
-                if (matchesSearch && matchesCategory) {
-                    card.style.display = 'flex';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                    if (card.classList.contains('selected')) {
-                        card.classList.remove('selected');
-                        let radio = card.querySelector('input[type="radio"]');
-                        if (radio) radio.checked = false;
-                    }
-                }
-            });
-
-            const noResultsMsg = document.getElementById('no-results');
-            if (visibleCount === 0) {
-                noResultsMsg.style.display = 'block';
-            } else {
-                noResultsMsg.style.display = 'none';
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            const sort = document.getElementById('collection-sort').value;
+            const matches = guitarDatabase.filter(guitar =>
+                typeof guitar.name === 'string' && guitar.name.toLowerCase().includes(query) &&
+                (currentCategoryFilter === 'all' || guitar.category === currentCategoryFilter)
+            );
+            if (sort === 'ascending' || sort === 'descending') {
+                const direction = sort === 'ascending' ? 1 : -1;
+                const rank = guitar => usablePrice(guitar.price)
+                    ? direction * Number(guitar.price.trim().slice(1).replaceAll(',', '')) : Infinity;
+                matches.sort((a, b) => rank(a) - rank(b));
             }
+            renderGuitars(matches);
+            document.getElementById('result-count').textContent = matches.length + (matches.length === 1 ? ' guitar' : ' guitars');
+            document.getElementById('no-results').hidden = matches.length > 0;
+        }
+
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('collection-sort').value = 'featured';
+            const all = document.querySelector('.filter-buttons button');
+            setFilter('all', all);
+            all.focus();
         }
 
         // TOAST
@@ -1301,7 +1359,7 @@
         }
 
         document.addEventListener('keydown', event => {
-            if (event.key !== 'Escape') return;
+            if (event.key !== 'Escape' || detailDialog.open) return;
             if (document.getElementById('profile-dropdown-menu').classList.contains('open')) {
                 closeProfileDropdown();
                 document.getElementById('profile-toggle').focus();
@@ -1355,11 +1413,13 @@
                 button.disabled = blocked;
             });
             document.getElementById('coupon-input').disabled = blocked || !!appliedCoupon;
+            document.getElementById('detail-buy').disabled = blocked || !detailName;
+            document.getElementById('detail-add').disabled = blocked || !detailName;
         }
 
         function renderAuthUI() {
             document.getElementById('welcome-title').textContent = activeUser
-                ? `Welcome, ${activeUser.username}!` : 'Welcome to GnC — Gitara ni Cata';
+                ? `Welcome, ${activeUser.username}!` : 'Gitara ni Cata';
             document.getElementById('dropdown-username').textContent = activeUser?.username || 'GnC';
             document.getElementById('dropdown-role').textContent = {
                 initializing: 'Checking account', member: 'Member', guest: 'Browsing as guest',
